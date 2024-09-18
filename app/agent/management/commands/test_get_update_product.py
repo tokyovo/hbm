@@ -23,12 +23,12 @@ class Command(BaseCommand):
         # Get a random product from the database
         random_product = Product.objects.all()[random.randint(0, product_count - 1)]
 
-        logger.info(f"Selected random product: {random_product.title} (URL: {random_product.source_url})")
+        logger.info(f"Selected random product: {random_product.pk} - {random_product.title} (URL: {random_product.source_url})")
 
         try:
             # Trigger the Celery task to get or update product info
             get_or_update_product_info.delay(random_product.source_url)
-            logger.info(f"Task triggered for product: {random_product.source_url}")
+            logger.info(f"Task triggered for product: {random_product.pk} (URL: {random_product.source_url})")
 
         except Exception as e:
-            logger.error(f"Error while triggering the task for {random_product.source_url}: {e}")
+            logger.error(f"Error while triggering the task for product {random_product.pk} (URL: {random_product.source_url}): {e}")
