@@ -69,15 +69,23 @@ LOGGING = {
         },
     },
     'loggers': {
+        # General Django logs
         'django': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'agent': {  # Replace 'agent' with your actual app name
+        # Your application logs (e.g., 'agent')
+        'agent': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+        # Database-related logs (suppress SQL queries)
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',  # Only log warnings and errors, not queries
+            'propagate': False,
         },
     },
 }
