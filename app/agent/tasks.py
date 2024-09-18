@@ -21,121 +21,132 @@ logger = logging.getLogger(__name__)
 @shared_task
 def get_or_update_product_info(product_url):
     """
-    Celery task to fetch or update a product's information.
-    It uses Selenium to handle dynamic content and BeautifulSoup for static content.
-
-    :param product_url: The URL of the product to scrape.
+    Fetch or update the product information for the given product URL.
     """
-    logger.info(f"Starting to process product: {product_url}")
+    logger.info(f"Fetching or updating product info for: {product_url}")
 
-    # Set up the WebDriver options
+    # Set up Selenium WebDriver options
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
-    service = Service(driver_path)
 
-    # Initialize the WebDriver
+    service = Service(driver_path)
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
         # Open the product page
         driver.get(product_url)
-        time.sleep(3)  # Wait for page to load
+        time.sleep(3)  # Adjust based on page load time
 
-        # Fetch the HTML content with BeautifulSoup
+        # Parse the HTML using BeautifulSoup
         response = requests.get(product_url)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Extract product title
+        # Extract the product title
         title_tag = soup.find('div', class_='product_form')
         title = title_tag.get('data-product', '').split('"title":"')[1].split('"')[0] if title_tag else 'Title not found'
+        logger.info(f"Product Title: {title}")
 
-        # Extract product description
+        # Extract the product description
         description_tag = soup.find('div', class_='description content bottom has-padding-top')
         description = description_tag.get_text(separator='\n', strip=True) if description_tag else 'Description not found'
+        logger.info(f"Product Description: {description}")
 
         # Extract image URL
         image_tag = soup.find('div', class_='image__container').find('img')
         image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else 'Image not found'
+        logger.info(f"Image URL: {image_url}")
 
-        # Create or update the product in the database
-        product_obj, created = Product.objects.update_or_create(
-            source_url=product_url,
-            defaults={
-                'title': title,
-                'description': description
-            }
-        )
-
-        # Add image to the product
-        if image_url != 'Image not found':
-            Image.objects.update_or_create(
-                product=product_obj,
-                defaults={'url': image_url}
-            )
+        # Process product options (like Size or Color) and prices
+        logger.info(f"Processing options for {product_url}...")
 
         # Initialize lists to store options and prices
         all_options = {}
         all_prices = {}
 
-        # Selenium to simulate option selection and price retrieval
         select_containers = driver.find_elements(By.CLASS_NAME, 'select-container')
 
         for container in select_containers:
             try:
+                # Find the option category label (e.g., Size, Color) and dropdown
                 label = container.find_element(By.TAG_NAME, 'label').text.strip()
                 select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
+                logger.info(f"Found option category: {label}")
 
+                # Create lists to store the options and prices for this label
                 options_list = []
                 prices_list = []
 
                 # Create a Select object to interact with the dropdown
                 select = Select(select_element)
 
+                # Loop through each option in the dropdown
                 for option in select.options:
+                    logger.info(f"Selecting option: {option.text}")
                     options_list.append(option.text)
-                    select.select_by_visible_text(option.text)
-                    time.sleep(2)  # Wait for the price to update
 
+                    # Select the option by visible text
+                    select.select_by_visible_text(option.text)
+
+                    # Wait for the price to update
+                    time.sleep(2)  # Adjust if necessary
+
+                    # Find and clean up the price element
                     try:
                         price_element = driver.find_element(By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money')
-                        price = price_element.text.strip()
-                        prices_list.append(price)
-                    except Exception as e:
-                        prices_list.append('Price not found')
+                        price_str = price_element.text.strip()
+                        logger.info(f"Raw price string: {price_str}")
 
-                # Store the options and prices
+                        # Clean up the price string (remove currency symbols, commas, etc.)
+                        clean_price_str = price_str.replace('$', '').replace(' AUD', '').strip()
+                        price = Decimal(clean_price_str)  # Convert to Decimal
+                        logger.info(f"Clean price: {price}")
+                        prices_list.append(price)
+
+                    except Exception as e:
+                        logger.error(f"Price element not found for option {option.text}. Error: {e}")
+                        prices_list.append(Decimal('0.0'))
+
+                # Store the options and prices in the all_options and all_prices dictionaries
                 all_options[label] = options_list
                 all_prices[label] = prices_list
 
-                # Handle updating or creating OptionCategory, OptionValue, and Variant
-                option_category, _ = OptionCategory.objects.get_or_create(name=label)
-                for i, option_value_text in enumerate(options_list):
-                    option_value, _ = OptionValue.objects.get_or_create(category=option_category, value=option_value_text)
-
-                    # Create or update the variant for the product
-                    price_value = prices_list[i] if prices_list[i] != 'Price not found' else 0.0
-                    variant, _ = Variant.objects.update_or_create(
-                        product=product_obj,
-                        price=price_value,
-                        defaults={}
-                    )
-                    variant.options.add(option_value)
-
             except Exception as e:
-                logger.error(f"Error processing options for {product_url}: {e}")
+                logger.error(f"Error processing options for {product_url}: {str(e)}")
 
-        logger.info(f"Completed processing product: {product_url}")
+        # Now, update the product in the database
+        product_obj, _ = Product.objects.update_or_create(
+            source_url=product_url,
+            defaults={
+                'title': title,
+                'description': description,
+            }
+        )
+
+        # Create or update variants with options and prices
+        for category, options_list in all_options.items():
+            for i, option_value in enumerate(options_list):
+                # Get or create OptionCategory and OptionValue
+                option_category, _ = OptionCategory.objects.get_or_create(name=category)
+                option_value_obj, _ = OptionValue.objects.get_or_create(category=option_category, value=option_value)
+
+                # Create or update the Variant
+                price = all_prices[category][i]
+                variant_obj, _ = Variant.objects.update_or_create(
+                    product=product_obj,
+                    price=price
+                )
+                variant_obj.options.add(option_value_obj)
+
+        logger.info(f"Finished processing product: {product_url}")
 
     except Exception as e:
-        logger.error(f"Error fetching product info from {product_url}: {e}")
+        logger.error(f"Error processing product {product_url}: {str(e)}")
 
     finally:
         # Close the WebDriver
         driver.quit()
-
-    return True
 
 @shared_task
 def get_collection_links_task(collection_limit=None, product_limit=None):
