@@ -34,7 +34,7 @@ class ProductAdmin(admin.ModelAdmin):
         """Display the collections a product belongs to with links to the collection in admin."""
         collections = obj.collections.all()
         links = [format_html('<a href="{}">{}</a>', self.get_admin_url(c), c.title) for c in collections]
-        return ", ".join(links)
+        return format_html(", ".join(links))  # Ensure the HTML is rendered correctly
 
     get_collections.short_description = 'Collections'
 
