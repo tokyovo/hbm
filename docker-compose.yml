@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: gunicorn webapp.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    volumes:
+      - ./app:/app
+      - static_volume:/static  # Mount static volume
+      - media_volume:/media    # Mount media volume
+    env_file:
+      - ./app/.env
+    depends_on:
+      - db
+      - redis
+    restart: always
+    expose:
+      - "8000"
+
+  celery:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: celery -A webapp worker --loglevel=info
+    volumes:
+      - ./app:/app
+      - static_volume:/static
+      - media_volume:/media
+    env_file:
+      - ./app/.env
+    depends_on:
+      - redis
+      - db
+    restart: always
+
+  celery-beat:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: celery -A webapp beat --loglevel=info
+    volumes:
+      - ./app:/app
+      - static_volume:/static
+      - media_volume:/media
+    env_file:
+      - ./app/.env
+    depends_on:
+      - redis
+      - db
+    restart: always
+
+  redis:
+    image: redis:alpine
+    restart: always
+    expose:
+      - "6379"
+
+  db:
+    image: postgres:14
+    restart: always
+    env_file:
+      - ./app/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - static_volume:/static
+      - media_volume:/media
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    restart: always
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8080:8080
+    restart: always
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
