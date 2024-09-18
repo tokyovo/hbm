@@ -53,9 +53,7 @@ class Variant(models.Model):
     options = models.ManyToManyField(OptionValue, related_name="variants")  # Many-to-many to represent combinations of Size, Color, etc.
 
     def __str__(self):
-        # Avoid recursion by accessing the `value` attribute of OptionValue directly
-        option_str = ", ".join([option.value for option in self.options.all()])
-        return f"{self.product.title} ({option_str}) - ${self.price}"
+        return f"Variant of {self.product.title}"
 
 
 class Image(models.Model):
