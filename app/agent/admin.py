@@ -7,7 +7,16 @@ from .models import Collection, Product, Variant, Image, OptionCategory, OptionV
 class VariantInline(admin.TabularInline):
     model = Variant
     extra = 1
-    fields = ['title', 'price']
+    # Show only valid fields from Variant: price and options
+    fields = ['price', 'get_options']
+
+    readonly_fields = ['get_options']  # Since this is a read-only field
+
+    def get_options(self, obj):
+        """Display the option values (e.g., Size, Color) for the variant."""
+        return ", ".join([str(option) for option in obj.options.all()])
+    
+    get_options.short_description = 'Options'  # Label for the admin column
 
 
 class ImageInline(admin.TabularInline):
@@ -17,30 +26,20 @@ class ImageInline(admin.TabularInline):
 
 
 class ProductInlineInCollection(admin.TabularInline):
-    """
-    Inline for showing products in Collection admin.
-    """
     model = Product.collections.through  # Many-to-many relationship for collections
     extra = 0
     fields = ['get_product_link']
-
-    readonly_fields = ['get_product_link']  # Make the field read-only
+    readonly_fields = ['get_product_link']
 
     def get_product_link(self, obj):
-        """
-        Return a clickable link to the product admin page.
-        """
         product = obj.product
-        url = reverse('admin:agent_product_change', args=[product.id])  # Use reverse to dynamically generate the URL
+        url = reverse('admin:agent_product_change', args=[product.id])
         return format_html('<a href="{}">{}</a>', url, product.title)
 
     get_product_link.short_description = 'Product'
 
 
 class ProductAdmin(admin.ModelAdmin):
-    """
-    Custom admin interface for Products.
-    """
     list_display = ['title', 'description', 'get_collections', 'created_at', 'updated_at']
     search_fields = ['title', 'description']
     list_filter = ['created_at', 'updated_at']
@@ -59,9 +58,6 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class CollectionAdmin(admin.ModelAdmin):
-    """
-    Custom admin interface for Collections.
-    """
     list_display = ['title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
     inlines = [ProductInlineInCollection]
