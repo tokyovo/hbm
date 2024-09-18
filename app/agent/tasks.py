@@ -56,7 +56,7 @@ def get_or_update_product_info(product_url):
 
         # Extract image URL
         image_tag = soup.find('div', class_='image__container').find('img')
-        image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else 'Image not found'
+        image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
         logger.info(f"Image URL: {image_url}")
 
         # Process product options (like Size or Color) and prices
@@ -125,6 +125,19 @@ def get_or_update_product_info(product_url):
             }
         )
 
+        # Create or update the Image for the product, if an image URL was found
+        if image_url:
+            image_obj, _ = Image.objects.update_or_create(
+                product=product_obj,
+                defaults={
+                    'url': image_url,
+                    'alt_text': title  # You can adjust alt_text if necessary
+                }
+            )
+            logger.info(f"Image linked to product: {product_obj.title} (URL: {image_url})")
+        else:
+            logger.info(f"No valid image URL found for product: {product_obj.title}")
+
         # Create or update variants with options and prices
         for category, options_list in all_options.items():
             for i, option_value in enumerate(options_list):
@@ -148,6 +161,7 @@ def get_or_update_product_info(product_url):
     finally:
         # Close the WebDriver
         driver.quit()
+
 
 @shared_task
 def get_collection_links_task(collection_limit=None, product_limit=None):
