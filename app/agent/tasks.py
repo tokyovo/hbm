@@ -12,10 +12,13 @@ base_url = "https://hairbeautymart.com.au"
 logger = logging.getLogger(__name__)
 
 @shared_task
-def get_collection_links_task():
+def get_collection_links_task(collection_limit=None, product_limit=None):
     """
     Celery task to fetch and store collection links and their products.
     This version adds detailed logging and progress tracking using tqdm.
+
+    :param collection_limit: Optional limit for the number of collections to process.
+    :param product_limit: Optional limit for the number of products to process per collection.
     """
     logger.info("Starting collection and product parsing task...")
 
@@ -23,14 +26,22 @@ def get_collection_links_task():
     collection_links = get_collection_links(base_url)
     collection_links.update(get_collection_links(f"{base_url}/collections"))
 
+    # Apply the collection limit if provided
+    if collection_limit:
+        collection_links = list(collection_links)[:collection_limit]
+
     logger.info(f"Found {len(collection_links)} collections to process.")
 
     # Process each collection link
-    for collection_link in tqdm(list(collection_links)[:5], desc="Processing collections"):
+    for collection_link in tqdm(collection_links, desc="Processing collections"):
         logger.info(f"Processing collection: {collection_link}")
         
         # Get product links for each collection
         product_links = get_product_links(collection_link)
+
+        # Apply the product limit if provided
+        if product_limit:
+            product_links = list(product_links)[:product_limit]
         
         # Save collection to the database
         collection_obj, _ = Collection.objects.update_or_create(

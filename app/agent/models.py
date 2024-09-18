@@ -22,13 +22,38 @@ class Product(models.Model):
         return self.title
 
 
-class Variant(models.Model):
-    product = models.ForeignKey(Product, related_name="variants", on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)  # E.g., "Red / Small" or "Blue / Large"
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+class OptionCategory(models.Model):
+    """
+    Represents categories like "Size", "Color", etc.
+    """
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
-        return f"{self.product.title} - {self.title}"
+        return self.name
+
+
+class OptionValue(models.Model):
+    """
+    Represents values like "Small", "Large" for Size, or "Red", "Blue" for Color.
+    """
+    category = models.ForeignKey(OptionCategory, related_name="values", on_delete=models.CASCADE)
+    value = models.CharField(max_length=50)
+
+    class Meta:
+        unique_together = ('category', 'value')
+
+    def __str__(self):
+        return f"{self.category.name}: {self.value}"
+
+
+class Variant(models.Model):
+    product = models.ForeignKey(Product, related_name="variants", on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    options = models.ManyToManyField(OptionValue, related_name="variants")  # Many-to-many to represent combinations of Size, Color, etc.
+
+    def __str__(self):
+        option_str = ", ".join([str(option) for option in self.options.all()])
+        return f"{self.product.title} ({option_str}) - ${self.price}"
 
 
 class Image(models.Model):
