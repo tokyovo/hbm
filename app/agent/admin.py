@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse  # Import for dynamic URL reversal
 from .models import Collection, Product, Variant, Image, OptionCategory, OptionValue
 
 
@@ -29,9 +31,17 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
-        """Display the collections a product belongs to in list view."""
-        return ", ".join([c.title for c in obj.collections.all()])
+        """Display the collections a product belongs to with links to the collection in admin."""
+        collections = obj.collections.all()
+        links = [format_html('<a href="{}">{}</a>', self.get_admin_url(c), c.title) for c in collections]
+        return ", ".join(links)
+
     get_collections.short_description = 'Collections'
+
+    def get_admin_url(self, obj):
+        """Return the admin URL for the related collection object dynamically."""
+        url = reverse('admin:agent_collection_change', args=[obj.id])  # Dynamically generate URL
+        return url
 
 
 class CollectionAdmin(admin.ModelAdmin):
