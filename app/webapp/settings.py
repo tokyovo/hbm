@@ -15,6 +15,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = os.getenv('DEBUG', '0') == '1'
 
 ALLOWED_HOSTS = ['seoai.japanvo.bid', 'localhost']  # Update this with your actual domain
+CSRF_TRUSTED_ORIGINS = ['https://seoai.japanvo.bid', 'http://localhost']
 
 # Application definition
 
