@@ -44,7 +44,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['title', 'description', 'price', 'get_collections', 'created_at', 'updated_at']
     search_fields = ['title', 'description']
     list_filter = ['created_at', 'updated_at']
-    inlines = [ImageInline]
+    inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
         logger.debug(f"Fetching collections for product {obj.id}")
@@ -72,6 +72,17 @@ class CollectionAdmin(admin.ModelAdmin):
     get_product_count.short_description = 'Total Products'
 
 
+class VariantAdmin(admin.ModelAdmin):
+    list_display = ['product', 'price', 'get_options']
+    search_fields = ['product__title', 'price']
+
+    def get_options(self, obj):
+        logger.debug(f"VariantAdmin: get_options for variant {obj.id}")
+        return ", ".join([str(option) for option in obj.options.all()])
+
+    get_options.short_description = 'Options'
+
+
 class OptionValueInline(admin.TabularInline):
     model = OptionValue
     extra = 1
@@ -87,4 +98,5 @@ class OptionCategoryAdmin(admin.ModelAdmin):
 # Register models in the Django admin
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(Variant, VariantAdmin)
 admin.site.register(OptionCategory, OptionCategoryAdmin)
