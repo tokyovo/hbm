@@ -13,7 +13,7 @@ class VariantInline(admin.TabularInline):
     readonly_fields = ['get_options']
 
     def get_options(self, obj):
-        """Display the option values (e.g., Size, Color) for the variant."""
+        logger.debug("VariantInline: get_options called")
         return ", ".join([str(option) for option in obj.options.all()])
 
     get_options.short_description = 'Options'
@@ -34,6 +34,7 @@ class ProductInlineInCollection(admin.TabularInline):
     def get_product_link(self, obj):
         product = obj.product
         url = reverse('admin:agent_product_change', args=[product.id])
+        logger.debug(f"ProductInlineInCollection: get_product_link for product {product.title}")
         return format_html('<a href="{}">{}</a>', url, product.title)
 
     get_product_link.short_description = 'Product'
@@ -43,13 +44,12 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['title', 'description', 'get_collections', 'created_at', 'updated_at']
     search_fields = ['title', 'description']
     list_filter = ['created_at', 'updated_at']
-    inlines = [VariantInline, ImageInline]  # Incrementally add inlines back to isolate issue
+    inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
         logger.debug(f"Fetching collections for product {obj.id}")
         collections = obj.collections.all()
         links = [format_html('<a href="{}">{}</a>', self.get_admin_url(c), c.title) for c in collections]
-        logger.debug(f"Collected links: {links}")
         return format_html(", ".join(links))
 
     get_collections.short_description = 'Collections'
