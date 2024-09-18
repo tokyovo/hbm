@@ -38,11 +38,16 @@ class CollectionAdmin(admin.ModelAdmin):
     """
     Custom admin interface for Collections.
     """
-    list_display = ['title', 'description']
+    list_display = ['title', 'description', 'get_product_count']  # Add product count to list display
     search_fields = ['title', 'description']
     inlines = [ProductInline]
 
     exclude = ('products',)  # Hide the 'products' many-to-many field
+
+    def get_product_count(self, obj):
+        """Return the total number of products in a collection."""
+        return obj.products.count()  # Count the number of related products
+    get_product_count.short_description = 'Total Products'  # Set the column name in the admin
 
 
 class OptionValueInline(admin.TabularInline):
@@ -67,4 +72,3 @@ class OptionCategoryAdmin(admin.ModelAdmin):
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(OptionCategory, OptionCategoryAdmin)
-
