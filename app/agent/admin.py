@@ -44,7 +44,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['title', 'description', 'get_collections', 'created_at', 'updated_at']
     search_fields = ['title', 'description']
     list_filter = ['created_at', 'updated_at']
-    inlines = [VariantInline, ImageInline]
+    #inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
         logger.debug(f"Fetching collections for product {obj.id}")
