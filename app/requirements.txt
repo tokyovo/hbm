@@ -8,3 +8,4 @@ python-dotenv
 requests           # For making HTTP requests
 beautifulsoup4     # For parsing HTML (used with requests)
 tqdm               # For displaying progress bars
+selenium

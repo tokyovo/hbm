@@ -8,10 +8,23 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory inside the container
 WORKDIR /app
 
-# Install netcat-openbsd for checking if the database is ready
-RUN apt-get update && apt-get install -y netcat-openbsd
+# Install netcat-openbsd, curl, Chrome, and ChromeDriver
+RUN apt-get update && apt-get install -y \
+    netcat-openbsd \
+    curl \
+    unzip \
+    && apt-get install -y wget gnupg2 \
+    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list' \
+    && apt-get update && apt-get install -y google-chrome-stable \
+    && CHROME_DRIVER_VERSION=`curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE` \
+    && wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
+    && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
+    && rm /tmp/chromedriver.zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
