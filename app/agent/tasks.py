@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import logging
+from decimal import Decimal
 from celery import shared_task
 from tqdm import tqdm
 from selenium import webdriver
