@@ -1,24 +1,40 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse  # Import for dynamic URL reversal
+from django.urls import reverse
 from .models import Collection, Product, Variant, Image, OptionCategory, OptionValue
 
 
 class VariantInline(admin.TabularInline):
     model = Variant
     extra = 1
-    fields = ['title', 'price']  # Display only title and price in the inline
+    fields = ['title', 'price']
 
 
 class ImageInline(admin.TabularInline):
     model = Image
     extra = 1
-    fields = ['url', 'alt_text']  # Display image URL and alt text in the inline
+    fields = ['url', 'alt_text']
 
 
-class ProductInline(admin.TabularInline):
+class ProductInlineInCollection(admin.TabularInline):
+    """
+    Inline for showing products in Collection admin.
+    """
     model = Product.collections.through  # Many-to-many relationship for collections
-    extra = 1
+    extra = 0
+    fields = ['get_product_link']
+
+    readonly_fields = ['get_product_link']  # Make the field read-only
+
+    def get_product_link(self, obj):
+        """
+        Return a clickable link to the product admin page.
+        """
+        product = obj.product
+        url = reverse('admin:agent_product_change', args=[product.id])  # Use reverse to dynamically generate the URL
+        return format_html('<a href="{}">{}</a>', url, product.title)
+
+    get_product_link.short_description = 'Product'
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -31,16 +47,14 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
-        """Display the collections a product belongs to with links to the collection in admin."""
         collections = obj.collections.all()
         links = [format_html('<a href="{}">{}</a>', self.get_admin_url(c), c.title) for c in collections]
-        return format_html(", ".join(links))  # Ensure the HTML is rendered correctly
+        return format_html(", ".join(links))
 
     get_collections.short_description = 'Collections'
 
     def get_admin_url(self, obj):
-        """Return the admin URL for the related collection object dynamically."""
-        url = reverse('admin:agent_collection_change', args=[obj.id])  # Dynamically generate URL
+        url = reverse('admin:agent_collection_change', args=[obj.id])
         return url
 
 
@@ -48,31 +62,25 @@ class CollectionAdmin(admin.ModelAdmin):
     """
     Custom admin interface for Collections.
     """
-    list_display = ['title', 'description', 'get_product_count']  # Add product count to list display
+    list_display = ['title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
-    inlines = [ProductInline]
+    inlines = [ProductInlineInCollection]
 
-    exclude = ('products',)  # Hide the 'products' many-to-many field
+    exclude = ('products',)
 
     def get_product_count(self, obj):
-        """Return the total number of products in a collection."""
-        return obj.products.count()  # Count the number of related products
-    get_product_count.short_description = 'Total Products'  # Set the column name in the admin
+        return obj.products.count()
+
+    get_product_count.short_description = 'Total Products'
 
 
 class OptionValueInline(admin.TabularInline):
-    """
-    Inline for Option Values (e.g., Small, Large).
-    """
     model = OptionValue
     extra = 1
     fields = ['value']
 
 
 class OptionCategoryAdmin(admin.ModelAdmin):
-    """
-    Admin interface for Option Categories (e.g., Size, Color).
-    """
     list_display = ['name']
     search_fields = ['name']
     inlines = [OptionValueInline]
