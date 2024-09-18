@@ -44,7 +44,7 @@ class OptionValue(models.Model):
         unique_together = ('category', 'value')
 
     def __str__(self):
-        return f"{self.category.name}: {self.value}"
+        return self.value
 
 
 class Variant(models.Model):
