@@ -20,20 +20,20 @@ class Command(BaseCommand):
             logger.error("No products found in the database.")
             return
 
-        # Loop through each product and call the update task
-        for product in products:
-            logger.info(f"Updating product: {product.title} (URL: {product.source_url})")
+        # Loop through each product and call the update task, while logging the index
+        for index, product in enumerate(products, start=1):
+            logger.info(f"Processing product {index}/{len(products)}: {product.title} (URL: {product.source_url})")
 
             try:
                 # Trigger the Celery task to get or update product info
                 get_or_update_product_info.delay(product.source_url)
-                logger.info(f"Task triggered for product: {product.title} (URL: {product.source_url})")
+                logger.info(f"Task triggered for product {index}/{len(products)}: {product.title} (URL: {product.source_url})")
 
             except Exception as e:
-                logger.error(f"Error while triggering the task for {product.title} (URL: {product.source_url}): {e}")
+                logger.error(f"Error while triggering the task for product {index}/{len(products)}: {product.title} (URL: {product.source_url}): {e}")
 
             # Sleep for 10 seconds before proceeding to the next product
-            logger.info("Sleeping for 10 seconds before processing the next product...")
+            logger.info(f"Sleeping for 10 seconds before processing the next product (index {index})...")
             time.sleep(10)
 
         logger.info("Completed the update process for all products.")
