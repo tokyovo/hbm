@@ -107,9 +107,43 @@ class OptionCategoryAdmin(admin.ModelAdmin):
 
 
 class WixProductAdmin(admin.ModelAdmin):
-    list_display = ['handle_id', 'name', 'price', 'get_collections', 'created_at', 'updated_at']
-    search_fields = ['name', 'handle_id', 'price']
-    list_filter = ['created_at', 'updated_at', 'collection']
+    list_display = [
+        'handle_id', 'name', 'price', 'ribbon', 'inventory', 'visible', 'get_collections', 'created_at', 'updated_at'
+    ]
+    search_fields = ['name', 'handle_id', 'price', 'sku']
+    list_filter = ['created_at', 'updated_at', 'collection', 'visible', 'inventory']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('handle_id', 'field_type', 'name', 'description', 'product_image_url', 'collection', 'sku', 'ribbon', 'price', 'surcharge', 'visible', 'inventory', 'discount_mode', 'discount_value', 'weight', 'cost')
+        }),
+        ('Product Options', {
+            'fields': (
+                ('product_option_name_1', 'product_option_type_1', 'product_option_description_1'),
+                ('product_option_name_2', 'product_option_type_2', 'product_option_description_2'),
+                ('product_option_name_3', 'product_option_type_3', 'product_option_description_3'),
+                ('product_option_name_4', 'product_option_type_4', 'product_option_description_4'),
+                ('product_option_name_5', 'product_option_type_5', 'product_option_description_5'),
+                ('product_option_name_6', 'product_option_type_6', 'product_option_description_6'),
+            )
+        }),
+        ('Additional Information', {
+            'fields': (
+                ('additional_info_title_1', 'additional_info_description_1'),
+                ('additional_info_title_2', 'additional_info_description_2'),
+                ('additional_info_title_3', 'additional_info_description_3'),
+                ('additional_info_title_4', 'additional_info_description_4'),
+                ('additional_info_title_5', 'additional_info_description_5'),
+                ('additional_info_title_6', 'additional_info_description_6'),
+            )
+        }),
+        ('Custom Text', {
+            'fields': ('custom_text_field_1', 'custom_text_char_limit_1', 'custom_text_mandatory_1')
+        }),
+        ('Brand', {
+            'fields': ('brand',)
+        }),
+    )
 
     def get_collections(self, obj):
         collections = obj.collection.all()
