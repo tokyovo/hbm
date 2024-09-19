@@ -66,7 +66,7 @@ class Image(models.Model):
 
 class WixProduct(models.Model):
     # Basic product fields
-    handle_id = models.CharField(max_length=50, unique=True)  # handleId
+    handle_id = models.CharField(max_length=50)  # handleId
     field_type = models.CharField(max_length=50, default="Product")  # fieldType
     name = models.CharField(max_length=255)  # Product name
     description = models.TextField(blank=True, null=True)  # Product description
