@@ -53,17 +53,17 @@ def get_or_update_product_info(product_url):
         # Extract the product title
         title_tag = soup.find('div', class_='product_form')
         title = title_tag.get('data-product', '').split('"title":"')[1].split('"')[0] if title_tag else 'Title not found'
-        logger.info(f"Product Title: {title}")
+        logger.info(f"Product Title collected: {title}")
 
         # Extract the product description
         description_tag = soup.find('div', class_='description content bottom has-padding-top')
         description = description_tag.get_text(separator='\n', strip=True) if description_tag else 'Description not found'
-        logger.info(f"Product Description: {description}")
+        logger.info(f"Product Description collected: {description}")
 
         # Extract the main image URL
         image_tag = soup.find('div', class_='image__container').find('img')
         main_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
-        logger.info(f"Main Product Image URL: {main_image_url}")
+        logger.info(f"Main Product Image URL collected: {main_image_url}")
 
         # Extract the price from the modal price section
         logger.info(f"Extracting price for {product_url}...")
@@ -71,19 +71,19 @@ def get_or_update_product_info(product_url):
         try:
             price_element = soup.find('p', class_='modal_price subtitle').find('span', class_='current_price').find('span', class_='money')
             price_str = price_element.text.strip()
-            logger.info(f"Raw price string: {price_str}")
+            logger.info(f"Raw price string collected: {price_str}")
 
             # Clean up the price string (remove currency symbols, commas, etc.)
             clean_price_str = price_str.replace('$', '').replace(' AUD', '').strip()
             price = Decimal(clean_price_str)  # Convert to Decimal
-            logger.info(f"Clean price: {price}")
+            logger.info(f"Clean price converted: {price}")
 
         except Exception as e:
             logger.error(f"Could not find price for {product_url}. Error: {str(e)}")
             price = Decimal('0.0')
 
         # Now, update the product in the database
-        product_obj, _ = Product.objects.update_or_create(
+        product_obj, created = Product.objects.update_or_create(
             source_url=product_url,
             defaults={
                 'title': title,
@@ -91,6 +91,10 @@ def get_or_update_product_info(product_url):
                 'price': price  # Always store the extracted price
             }
         )
+        if created:
+            logger.info(f"Product created: {product_obj.title} (ID: {product_obj.id})")
+        else:
+            logger.info(f"Product updated: {product_obj.title} (ID: {product_obj.id})")
 
         # Create or update the Image for the main product
         if main_image_url:
@@ -121,7 +125,7 @@ def get_or_update_product_info(product_url):
                     # Find the option category label (e.g., Size, Color) and dropdown
                     label = container.find_element(By.TAG_NAME, 'label').text.strip()
                     select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
-                    logger.info(f"Found option category: {label}")
+                    logger.info(f"Option category found: {label}")
 
                     # Create lists to store the options, prices, and images for this label
                     options_list = []
@@ -146,12 +150,12 @@ def get_or_update_product_info(product_url):
                         try:
                             price_element = driver.find_element(By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money')
                             price_str = price_element.text.strip()
-                            logger.info(f"Raw price string: {price_str}")
+                            logger.info(f"Raw price string collected for option {option.text}: {price_str}")
 
                             # Clean up the price string (remove currency symbols, commas, etc.)
                             clean_price_str = price_str.replace('$', '').replace(' AUD', '').strip()
                             price = Decimal(clean_price_str)  # Convert to Decimal
-                            logger.info(f"Clean price: {price}")
+                            logger.info(f"Clean price for option {option.text}: {price}")
                             prices_list.append(price)
 
                         except Exception as e:
@@ -162,7 +166,7 @@ def get_or_update_product_info(product_url):
                         try:
                             variant_image_tag = soup.find('div', class_='image__container').find('img')
                             variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
-                            logger.info(f"Variant Image URL: {variant_image_url}")
+                            logger.info(f"Variant Image URL for option {option.text}: {variant_image_url}")
                             images_list.append(variant_image_url)
 
                         except Exception as e:
@@ -183,14 +187,20 @@ def get_or_update_product_info(product_url):
                 # Get or create OptionCategory and OptionValue
                 option_category, _ = OptionCategory.objects.get_or_create(name=category)
                 option_value_obj, _ = OptionValue.objects.get_or_create(category=option_category, value=option_value)
+                logger.info(f"Created or retrieved option: {option_value_obj.value} (Category: {option_category.name})")
 
                 # Create or update the Variant
                 price = all_prices[category][i]
-                variant_obj, _ = Variant.objects.update_or_create(
+                variant_obj, created = Variant.objects.update_or_create(
                     product=product_obj,
                     price=price
                 )
                 variant_obj.options.add(option_value_obj)
+
+                if created:
+                    logger.info(f"Variant created: {option_value_obj.value} (Price: {price})")
+                else:
+                    logger.info(f"Variant updated: {option_value_obj.value} (Price: {price})")
 
                 # Associate the variant with its image (if any)
                 variant_image_url = all_variant_images[category][i]
@@ -203,12 +213,11 @@ def get_or_update_product_info(product_url):
                             'alt_text': f"{title} - {option_value}"  # Use the variant's option value as alt text
                         }
                     )
-                    logger.info(f"Image linked to variant: {option_value} (URL: {variant_image_url})")
+                    logger.info(f"Image linked to variant {option_value_obj.value} (URL: {variant_image_url})")
 
         product_obj.allow_update = False
         product_obj.save()
-
-        logger.info(f"Finished processing product: {product_url}")
+        logger.info(f"Product processing completed: {product_url}")
 
     except Exception as e:
         logger.error(f"Error processing product {product_url}: {str(e)}")
