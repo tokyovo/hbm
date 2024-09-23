@@ -60,16 +60,15 @@ def get_or_update_product_info(product_url):
         description = description_tag.get_text(separator='\n', strip=True) if description_tag else 'Description not found'
         logger.info(f"Product Description: {description}")
 
-        # Extract image URL
+        # Extract the main image URL
         image_tag = soup.find('div', class_='image__container').find('img')
-        image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
-        logger.info(f"Image URL: {image_url}")
+        main_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
+        logger.info(f"Main Product Image URL: {main_image_url}")
 
         # Extract the price from the modal price section
         logger.info(f"Extracting price for {product_url}...")
 
         try:
-            # Extract the price within the correct modal_price class
             price_element = soup.find('p', class_='modal_price subtitle').find('span', class_='current_price').find('span', class_='money')
             price_str = price_element.text.strip()
             logger.info(f"Raw price string: {price_str}")
@@ -93,25 +92,26 @@ def get_or_update_product_info(product_url):
             }
         )
 
-        # Create or update the Image for the product, if an image URL was found
-        if image_url:
-            image_obj, _ = Image.objects.update_or_create(
+        # Create or update the Image for the main product
+        if main_image_url:
+            Image.objects.update_or_create(
                 product=product_obj,
                 defaults={
-                    'url': image_url,
+                    'url': main_image_url,
                     'alt_text': title  # You can adjust alt_text if necessary
                 }
             )
-            logger.info(f"Image linked to product: {product_obj.title} (URL: {image_url})")
+            logger.info(f"Main image linked to product: {product_obj.title} (URL: {main_image_url})")
         else:
-            logger.info(f"No valid image URL found for product: {product_obj.title}")
+            logger.info(f"No valid main image URL found for product: {product_obj.title}")
 
         # Process product options (like Size or Color) and prices
         logger.info(f"Processing options for {product_url}...")
 
-        # Initialize lists to store options and prices
+        # Initialize lists to store options, prices, and variant images
         all_options = {}
         all_prices = {}
+        all_variant_images = {}
 
         select_containers = driver.find_elements(By.CLASS_NAME, 'select-container')
 
@@ -123,9 +123,10 @@ def get_or_update_product_info(product_url):
                     select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
                     logger.info(f"Found option category: {label}")
 
-                    # Create lists to store the options and prices for this label
+                    # Create lists to store the options, prices, and images for this label
                     options_list = []
                     prices_list = []
+                    images_list = []
 
                     # Create a Select object to interact with the dropdown
                     select = Select(select_element)
@@ -138,7 +139,7 @@ def get_or_update_product_info(product_url):
                         # Select the option by visible text
                         select.select_by_visible_text(option.text)
 
-                        # Wait for the price to update
+                        # Wait for the price and image to update
                         time.sleep(2)  # Adjust if necessary
 
                         # Find and clean up the price element
@@ -157,13 +158,25 @@ def get_or_update_product_info(product_url):
                             logger.error(f"Price element not found for option {option.text}. Error: {e}")
                             prices_list.append(Decimal('0.0'))
 
-                    # Store the options and prices in the all_options and all_prices dictionaries
+                        # Re-fetch the image URL for the selected variant (if different)
+                        try:
+                            variant_image_tag = soup.find('div', class_='image__container').find('img')
+                            variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
+                            logger.info(f"Variant Image URL: {variant_image_url}")
+                            images_list.append(variant_image_url)
+
+                        except Exception as e:
+                            logger.error(f"Could not find image for variant {option.text}. Error: {e}")
+                            images_list.append(main_image_url)  # Default to main image if variant image not found
+
+                    # Store the options, prices, and images in the respective dictionaries
                     all_options[label] = options_list
                     all_prices[label] = prices_list
+                    all_variant_images[label] = images_list
 
                 except Exception as e:
                     logger.error(f"Error processing options for {product_url}: {str(e)}")
-        
+
         # Create variants based on the available options
         for category, options_list in all_options.items():
             for i, option_value in enumerate(options_list):
@@ -178,7 +191,20 @@ def get_or_update_product_info(product_url):
                     price=price
                 )
                 variant_obj.options.add(option_value_obj)
-        
+
+                # Associate the variant with its image (if any)
+                variant_image_url = all_variant_images[category][i]
+                if variant_image_url:
+                    Image.objects.update_or_create(
+                        product=product_obj,
+                        variant=variant_obj,  # Associate the image with this variant
+                        defaults={
+                            'url': variant_image_url,
+                            'alt_text': f"{title} - {option_value}"  # Use the variant's option value as alt text
+                        }
+                    )
+                    logger.info(f"Image linked to variant: {option_value} (URL: {variant_image_url})")
+
         product_obj.allow_update = False
         product_obj.save()
 
