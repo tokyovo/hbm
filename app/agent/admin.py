@@ -76,7 +76,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'description', 'get_product_count']
+    list_display = ['pk', 'title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
     inlines = [ProductInlineInCollection, WixProductInline]  # Added WixProductInline here
     exclude = ('products',)
