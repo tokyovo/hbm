@@ -38,6 +38,5 @@ class Command(BaseCommand):
 
             # Sleep for 10 seconds before proceeding to the next product
             logger.info(f"Sleeping for 10 seconds before processing the next product (index {index})...")
-            time.sleep(10)
 
         logger.info("Completed the update process for all applicable products.")
