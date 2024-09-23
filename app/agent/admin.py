@@ -91,7 +91,7 @@ class ProductInlineInCollection(admin.TabularInline):
 
 
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'description', 'get_product_count']
+    list_display = ['id', 'title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
     inlines = [ProductInlineInCollection]  # Inline for products in the collection
 
