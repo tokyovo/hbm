@@ -16,6 +16,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     collections = models.ManyToManyField(Collection, related_name="products")  # Many-to-many relationship with collections
     source_url = models.URLField(unique=True)  # Stores the URL from which the product was parsed
+    allow_update = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

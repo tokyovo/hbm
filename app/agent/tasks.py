@@ -105,6 +105,9 @@ def get_or_update_product_info(product_url):
             logger.info(f"Image linked to product: {product_obj.title} (URL: {image_url})")
         else:
             logger.info(f"No valid image URL found for product: {product_obj.title}")
+        
+        product_obj.allow_update = False
+        product_obj.save()
 
         logger.info(f"Finished processing product: {product_url}")
 

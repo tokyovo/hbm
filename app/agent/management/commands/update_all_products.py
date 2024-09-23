@@ -8,16 +8,16 @@ from agent.tasks import get_or_update_product_info
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Update all products by running the get_or_update_product_info task and wait for each task to complete.'
+    help = 'Update products with allow_update=True by running the get_or_update_product_info task and wait for each task to complete.'
 
     def handle(self, *args, **options):
-        logger.info("Starting the update process for all products...")
+        logger.info("Starting the update process for products where allow_update=True...")
 
-        # Fetch all products from the database
-        products = Product.objects.all()
+        # Fetch only products where allow_update is True
+        products = Product.objects.filter(allow_update=True)
 
         if not products.exists():
-            logger.error("No products found in the database.")
+            logger.error("No products found with allow_update=True.")
             return
 
         # Loop through each product and call the update task, while logging the index
@@ -40,4 +40,4 @@ class Command(BaseCommand):
             logger.info(f"Sleeping for 10 seconds before processing the next product (index {index})...")
             time.sleep(10)
 
-        logger.info("Completed the update process for all products.")
+        logger.info("Completed the update process for all applicable products.")
