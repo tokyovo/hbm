@@ -32,7 +32,6 @@ def get_or_update_product_info(product_url):
     options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
     options.add_argument('--no-sandbox')  # Bypass OS security model
     options.add_argument('--disable-gpu')  # Applicable to windows OS only
-    options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
     options.add_argument('--remote-debugging-port=9222')  # Required for Chrome to work in headless mode
     options.add_argument('--disable-software-rasterizer')
     options.add_argument('--disable-extensions')  # Disable extensions that could interfere
@@ -66,11 +65,12 @@ def get_or_update_product_info(product_url):
         image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
         logger.info(f"Image URL: {image_url}")
 
-        # Extract the price (no matter if options exist or not)
+        # Extract the price from the modal price section
         logger.info(f"Extracting price for {product_url}...")
 
         try:
-            price_element = soup.find('span', class_='current_price').find('span', class_='money')
+            # Extract the price within the correct modal_price class
+            price_element = soup.find('p', class_='modal_price subtitle').find('span', class_='current_price').find('span', class_='money')
             price_str = price_element.text.strip()
             logger.info(f"Raw price string: {price_str}")
 
