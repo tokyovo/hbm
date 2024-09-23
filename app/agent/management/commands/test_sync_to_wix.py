@@ -7,7 +7,7 @@ from agent.models import Product, WixProduct, Collection, Variant, OptionCategor
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Sync one Product instance to WixProduct'
+    help = 'Sync a limited number of Product instances to WixProduct'
 
     def handle(self, *args, **options):
         logger.info("Starting the synchronization process for a single product to WixProduct...")
@@ -22,6 +22,14 @@ class Command(BaseCommand):
         # Initialize tqdm progress bar with total 1 product
         with tqdm(total=1, desc="Syncing Product", unit="product") as pbar:
             try:
+                # Ensure the product has a collection
+                if product.collections.exists():
+                    collection = product.collections.first()  # Get the first collection
+                else:
+                    # Optionally assign a default collection
+                    collection, _ = Collection.objects.get_or_create(title="Default Collection")
+                    logger.warning(f"Assigned default collection to product {product.title} (ID: {product.id})")
+
                 # Sync the main product as a WixProduct
                 wix_product, created = WixProduct.objects.update_or_create(
                     handle_id=str(product.id),  # Using the Product's PK as the handle_id
@@ -39,12 +47,9 @@ class Command(BaseCommand):
                         'discount_value': 0,
                         'weight': None,
                         'cost': None,
+                        'collection_id': collection.id  # Set the collection_id
                     }
                 )
-
-                # Sync the product's collections to the WixProduct
-                wix_product.collection.set(product.collections.all())
-                wix_product.save()
 
                 if created:
                     logger.info(f"Created WixProduct for: {product.title} (ID: {product.id})")
@@ -89,6 +94,7 @@ class Command(BaseCommand):
                                 'discount_value': 0,
                                 'weight': None,
                                 'cost': None,
+                                'collection_id': collection.id,  # Set the collection_id for the variant
                                 'product_option_name_1': option_names[0] if len(option_names) > 0 else None,
                                 'product_option_type_1': option_types[0] if len(option_types) > 0 else None,
                                 'product_option_description_1': option_descriptions[0] if len(option_descriptions) > 0 else None,
@@ -109,10 +115,6 @@ class Command(BaseCommand):
                                 'product_option_description_6': option_descriptions[5] if len(option_descriptions) > 5 else None,
                             }
                         )
-
-                        # Sync the variant's collections to the WixProduct
-                        variant_wix_product.collection.set(product.collections.all())
-                        variant_wix_product.save()
 
                         if created:
                             logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
