@@ -9,22 +9,23 @@ logger = logging.getLogger(__name__)
 class VariantInline(admin.TabularInline):
     model = Variant
     extra = 1
-    fields = ['price', 'get_options', 'get_variant_image']
-    readonly_fields = ['get_options', 'get_variant_image']
+    fields = ['price', 'get_options', 'get_variant_images']
+    readonly_fields = ['get_options', 'get_variant_images']
 
     def get_options(self, obj):
         logger.debug("VariantInline: get_options called")
         return ", ".join([str(option) for option in obj.options.all()])
 
-    def get_variant_image(self, obj):
-        image = Image.objects.filter(variant=obj).first()
-        if image:
-            return format_html('<img src="{}" width="100" height="100" />', image.url)
-        return "No Image"
-
     get_options.short_description = 'Options'
-    get_variant_image.short_description = 'Variant Image'
 
+    def get_variant_images(self, obj):
+        if obj.images.exists():
+            images = obj.images.all()
+            image_links = [format_html('<img src="{}" style="width: 50px; height: auto;">', image.url) for image in images]
+            return format_html(" ".join(image_links))
+        return "No images"
+    
+    get_variant_images.short_description = 'Images'
 
 class ImageInline(admin.TabularInline):
     model = Image
