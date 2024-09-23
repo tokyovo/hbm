@@ -9,20 +9,33 @@ logger = logging.getLogger(__name__)
 class VariantInline(admin.TabularInline):
     model = Variant
     extra = 1
-    fields = ['price', 'get_options']
-    readonly_fields = ['get_options']
+    fields = ['price', 'get_options', 'get_variant_image']
+    readonly_fields = ['get_options', 'get_variant_image']
 
     def get_options(self, obj):
         logger.debug("VariantInline: get_options called")
         return ", ".join([str(option) for option in obj.options.all()])
 
+    def get_variant_image(self, obj):
+        image = Image.objects.filter(variant=obj).first()
+        if image:
+            return format_html('<img src="{}" width="100" height="100" />', image.url)
+        return "No Image"
+
     get_options.short_description = 'Options'
+    get_variant_image.short_description = 'Variant Image'
 
 
 class ImageInline(admin.TabularInline):
     model = Image
     extra = 1
-    fields = ['url', 'alt_text']
+    fields = ['url', 'alt_text', 'get_image']
+    readonly_fields = ['get_image']
+
+    def get_image(self, obj):
+        return format_html('<img src="{}" width="100" height="100" />', obj.url)
+
+    get_image.short_description = 'Image Preview'
 
 
 class ProductInlineInCollection(admin.TabularInline):
@@ -75,20 +88,6 @@ class ProductAdmin(admin.ModelAdmin):
         return url
 
 
-class ProductInlineInCollection(admin.TabularInline):
-    model = Product.collections.through
-    extra = 0
-    fields = ['get_product_link']
-    readonly_fields = ['get_product_link']
-
-    def get_product_link(self, obj):
-        product = obj.product
-        url = reverse('admin:agent_product_change', args=[product.id])
-        logger.debug(f"ProductInlineInCollection: get_product_link for product {product.title}")
-        return format_html('<a href="{}">{}</a>', url, product.title)
-
-    get_product_link.short_description = 'Product'
-
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ['pk', 'title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
@@ -99,6 +98,7 @@ class CollectionAdmin(admin.ModelAdmin):
         return obj.products.count()
 
     get_product_count.short_description = 'Total Products'
+
 
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['product', 'price', 'get_options']
