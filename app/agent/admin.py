@@ -52,9 +52,9 @@ class WixProductInline(admin.TabularInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['title', 'description', 'price', 'get_collections', 'created_at', 'updated_at']
+    list_display = ['title', 'description', 'price', 'get_collections', 'allow_udpate', 'created_at', 'updated_at']
     search_fields = ['title', 'description']
-    list_filter = ['created_at', 'updated_at']
+    list_filter = ['allow_update', 'created_at', 'updated_at']
     inlines = [VariantInline, ImageInline]
 
     def get_collections(self, obj):
