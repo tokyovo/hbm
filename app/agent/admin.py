@@ -89,98 +89,16 @@ class ProductInlineInCollection(admin.TabularInline):
 
     get_product_link.short_description = 'Product'
 
-
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'description', 'get_product_count']
+    list_display = ['pk', 'title', 'description', 'get_product_count']
     search_fields = ['title', 'description']
-    inlines = [ProductInlineInCollection]  # Inline for products in the collection
+    inlines = [ProductInlineInCollection, WixProductInline]  # Added WixProductInline here
+    exclude = ('products',)
 
-    # Function to count products in a collection
     def get_product_count(self, obj):
         return obj.products.count()
 
     get_product_count.short_description = 'Total Products'
-
-    # Custom export action to export the products in a collection to CSV
-    def export_to_csv(self, request, collection_id):
-        collection = self.get_object(request, collection_id)
-
-        if not collection:
-            self.message_user(request, "Collection not found", level="error")
-            return HttpResponse(status=404)
-
-        # Get all WixProducts associated with the collection
-        wix_products = WixProduct.objects.filter(collections=collection)
-
-        if not wix_products.exists():
-            self.message_user(request, "No WixProducts found in this collection", level="warning")
-            return HttpResponse(status=404)
-
-        # Create CSV response
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{collection.title}_wix_products.csv"'
-
-        # Define CSV headers
-        writer = csv.writer(response)
-        writer.writerow([
-            "handleId", "fieldType", "name", "description", "productImageUrl", "collection", "sku", "ribbon", "price", 
-            "surcharge", "visible", "discountMode", "discountValue", "inventory", "weight", "cost",
-            "productOptionName1", "productOptionType1", "productOptionDescription1", "productOptionName2",
-            "productOptionType2", "productOptionDescription2", "productOptionName3", "productOptionType3",
-            "productOptionDescription3", "productOptionName4", "productOptionType4", "productOptionDescription4",
-            "productOptionName5", "productOptionType5", "productOptionDescription5", "productOptionName6",
-            "productOptionType6", "productOptionDescription6", "additionalInfoTitle1", "additionalInfoDescription1",
-            "additionalInfoTitle2", "additionalInfoDescription2", "additionalInfoTitle3", "additionalInfoDescription3",
-            "additionalInfoTitle4", "additionalInfoDescription4", "additionalInfoTitle5", "additionalInfoDescription5",
-            "additionalInfoTitle6", "additionalInfoDescription6", "customTextField1", "customTextCharLimit1",
-            "customTextMandatory1", "brand"
-        ])
-
-        # Write the product data to CSV
-        for wix_product in wix_products:
-            writer.writerow([
-                wix_product.handle_id, wix_product.field_type, wix_product.name, wix_product.description, 
-                wix_product.product_image_url, ";".join([c.title for c in wix_product.collections.all()]),
-                wix_product.sku, wix_product.ribbon, wix_product.price, wix_product.surcharge, wix_product.visible,
-                wix_product.discount_mode, wix_product.discount_value, wix_product.inventory, wix_product.weight,
-                wix_product.cost, wix_product.product_option_name_1, wix_product.product_option_type_1, 
-                wix_product.product_option_description_1, wix_product.product_option_name_2,
-                wix_product.product_option_type_2, wix_product.product_option_description_2,
-                wix_product.product_option_name_3, wix_product.product_option_type_3, 
-                wix_product.product_option_description_3, wix_product.product_option_name_4,
-                wix_product.product_option_type_4, wix_product.product_option_description_4,
-                wix_product.product_option_name_5, wix_product.product_option_type_5, 
-                wix_product.product_option_description_5, wix_product.product_option_name_6,
-                wix_product.product_option_type_6, wix_product.product_option_description_6, 
-                wix_product.additional_info_title_1, wix_product.additional_info_description_1,
-                wix_product.additional_info_title_2, wix_product.additional_info_description_2,
-                wix_product.additional_info_title_3, wix_product.additional_info_description_3,
-                wix_product.additional_info_title_4, wix_product.additional_info_description_4,
-                wix_product.additional_info_title_5, wix_product.additional_info_description_5,
-                wix_product.additional_info_title_6, wix_product.additional_info_description_6,
-                wix_product.custom_text_field_1, wix_product.custom_text_char_limit_1, 
-                wix_product.custom_text_mandatory_1, wix_product.brand
-            ])
-
-        return response
-
-    # Add a custom button to export the CSV from the admin interface
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        extra_context = extra_context or {}
-        extra_context['export_button'] = format_html(
-            '<a class="button" href="{}">Export Wix Products to CSV</a>',
-            reverse('admin:export_wixproducts', args=[object_id])
-        )
-        return super().change_view(request, object_id, form_url, extra_context=extra_context)
-
-    # Set the URL for the export action
-    def get_urls(self):
-        from django.urls import path
-        urls = super().get_urls()
-        custom_urls = [
-            path('<int:collection_id>/export_wixproducts/', self.export_to_csv, name='export_wixproducts'),
-        ]
-        return custom_urls + urls
 
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['product', 'price', 'get_options']
