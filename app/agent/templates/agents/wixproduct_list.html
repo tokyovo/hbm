@@ -1,0 +1,49 @@
+<!-- templates/wixproduct_list.html -->
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Select Collection</h1>
+  <form method="post" class="form-inline">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  {% if wix_products %}
+    <h2>Products in Collection: {{ collection.title }}</h2>
+    
+    <!-- Export to CSV Form -->
+    <form method="post" action="">
+      {% csrf_token %}
+      <input type="hidden" name="collection_id" value="{{ collection.id }}">
+      <button type="submit" name="export_csv" class="btn btn-success">Export to CSV</button>
+    </form>
+
+    <table class="table table-bordered mt-3">
+      <thead>
+        <tr>
+          <th>Handle ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Price</th>
+          <th>SKU</th>
+          <th>Ribbon</th>
+          <th>Inventory</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in wix_products %}
+          <tr>
+            <td>{{ product.handle_id }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.description }}</td>
+            <td>{{ product.price }}</td>
+            <td>{{ product.sku }}</td>
+            <td>{{ product.ribbon }}</td>
+            <td>{{ product.inventory }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}
