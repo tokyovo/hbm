@@ -1,7 +1,7 @@
 import logging
 from tqdm import tqdm
 from django.core.management.base import BaseCommand
-from agent.models import Product, WixProduct, Collection, Variant, OptionCategory
+from agent.models import Product, WixProduct, Variant
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                     )
 
                     # Sync the product's collections to the WixProduct
-                    wix_product.collection.set(product.collections.all())
+                    wix_product.collections.set(product.collections.all())  # Fix here: using the many-to-many relationship
                     wix_product.save()
 
                     if created:
@@ -113,7 +113,7 @@ class Command(BaseCommand):
                             )
 
                             # Sync the variant's collections to the WixProduct
-                            variant_wix_product.collection.set(product.collections.all())
+                            variant_wix_product.collections.set(product.collections.all())  # Fix here: using the many-to-many relationship
                             variant_wix_product.save()
 
                             if created:
