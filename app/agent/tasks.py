@@ -105,6 +105,79 @@ def get_or_update_product_info(product_url):
             logger.info(f"Image linked to product: {product_obj.title} (URL: {image_url})")
         else:
             logger.info(f"No valid image URL found for product: {product_obj.title}")
+
+        # Process product options (like Size or Color) and prices
+        logger.info(f"Processing options for {product_url}...")
+
+        # Initialize lists to store options and prices
+        all_options = {}
+        all_prices = {}
+
+        select_containers = driver.find_elements(By.CLASS_NAME, 'select-container')
+
+        if select_containers:
+            for container in select_containers:
+                try:
+                    # Find the option category label (e.g., Size, Color) and dropdown
+                    label = container.find_element(By.TAG_NAME, 'label').text.strip()
+                    select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
+                    logger.info(f"Found option category: {label}")
+
+                    # Create lists to store the options and prices for this label
+                    options_list = []
+                    prices_list = []
+
+                    # Create a Select object to interact with the dropdown
+                    select = Select(select_element)
+
+                    # Loop through each option in the dropdown
+                    for option in select.options:
+                        logger.info(f"Selecting option: {option.text}")
+                        options_list.append(option.text)
+
+                        # Select the option by visible text
+                        select.select_by_visible_text(option.text)
+
+                        # Wait for the price to update
+                        time.sleep(2)  # Adjust if necessary
+
+                        # Find and clean up the price element
+                        try:
+                            price_element = driver.find_element(By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money')
+                            price_str = price_element.text.strip()
+                            logger.info(f"Raw price string: {price_str}")
+
+                            # Clean up the price string (remove currency symbols, commas, etc.)
+                            clean_price_str = price_str.replace('$', '').replace(' AUD', '').strip()
+                            price = Decimal(clean_price_str)  # Convert to Decimal
+                            logger.info(f"Clean price: {price}")
+                            prices_list.append(price)
+
+                        except Exception as e:
+                            logger.error(f"Price element not found for option {option.text}. Error: {e}")
+                            prices_list.append(Decimal('0.0'))
+
+                    # Store the options and prices in the all_options and all_prices dictionaries
+                    all_options[label] = options_list
+                    all_prices[label] = prices_list
+
+                except Exception as e:
+                    logger.error(f"Error processing options for {product_url}: {str(e)}")
+        
+        # Create variants based on the available options
+        for category, options_list in all_options.items():
+            for i, option_value in enumerate(options_list):
+                # Get or create OptionCategory and OptionValue
+                option_category, _ = OptionCategory.objects.get_or_create(name=category)
+                option_value_obj, _ = OptionValue.objects.get_or_create(category=option_category, value=option_value)
+
+                # Create or update the Variant
+                price = all_prices[category][i]
+                variant_obj, _ = Variant.objects.update_or_create(
+                    product=product_obj,
+                    price=price
+                )
+                variant_obj.options.add(option_value_obj)
         
         product_obj.allow_update = False
         product_obj.save()
