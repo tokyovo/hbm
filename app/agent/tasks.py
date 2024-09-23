@@ -205,15 +205,18 @@ def get_or_update_product_info(product_url):
                 # Associate the variant with its image (if any)
                 variant_image_url = all_variant_images[category][i]
                 if variant_image_url:
-                    Image.objects.update_or_create(
-                        product=product_obj,
-                        variant=variant_obj,  # Associate the image with this variant
+                    # Create or update the Image for the variant
+                    variant_image_obj, _ = Image.objects.update_or_create(
+                        product=product_obj,  # Associate with the product
                         defaults={
-                            'url': variant_image_url,
+                            'url': variant_image_url,  # URL of the variant image
                             'alt_text': f"{title} - {option_value}"  # Use the variant's option value as alt text
                         }
                     )
-                    logger.info(f"Image linked to variant {option_value_obj.value} (URL: {variant_image_url})")
+
+                    # Add the image to the variant's images many-to-many relationship
+                    variant_obj.images.add(variant_image_obj)
+                    logger.info(f"Image {variant_image_url} linked to variant: {variant_obj} for option {option_value}")
 
         product_obj.allow_update = False
         product_obj.save()
