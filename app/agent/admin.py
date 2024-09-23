@@ -146,7 +146,7 @@ class WixProductAdmin(admin.ModelAdmin):
     )
 
     def get_collections(self, obj):
-        collections = obj.collection.all()
+        collections = obj.collection
         links = [format_html('<a href="{}">{}</a>', reverse('admin:agent_collection_change', args=[c.id]), c.title) for c in collections]
         return format_html(", ".join(links))
 
