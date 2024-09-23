@@ -47,16 +47,6 @@ class OptionValue(models.Model):
     def __str__(self):
         return self.value
 
-
-class Variant(models.Model):
-    product = models.ForeignKey(Product, related_name="variants", on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    options = models.ManyToManyField(OptionValue, related_name="variants")  # Many-to-many to represent combinations of Size, Color, etc.
-
-    def __str__(self):
-        return f"Variant of {self.product.title}"
-
-
 class Image(models.Model):
     product = models.ForeignKey(Product, related_name="images", on_delete=models.CASCADE)
     url = models.URLField()  # Store the image URL (from Shopify or your server)
@@ -64,6 +54,15 @@ class Image(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.title}"
+
+class Variant(models.Model):
+    product = models.ForeignKey(Product, related_name="variants", on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    options = models.ManyToManyField(OptionValue, related_name="variants")  # Many-to-many to represent combinations of Size, Color, etc.
+    images = models.ManyToManyField('Image', related_name="variant_images", blank=True, null=True)
+
+    def __str__(self):
+        return f"Variant of {self.product.title}"
 
 class WixProduct(models.Model):
     # Basic product fields
