@@ -77,7 +77,7 @@ class Command(BaseCommand):
 
                             # Sync the variant as a WixProduct with field_type 'Variant'
                             variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=product.id,
+                                handle_id=f"{product.id}_variant_{idx}",
                                 defaults={
                                     'field_type': 'Variant',
                                     'name': f"{product.title} - {variant}",  # Variant title
@@ -117,14 +117,5 @@ class Command(BaseCommand):
                             variant_wix_product.save()
 
                             if created:
-                                logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
+                                logger.debug(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
                             else:
-                                logger.info(f"Updated WixProduct Variant for: {product.title} - Variant {idx + 1}")
-
-                except Exception as e:
-                    logger.error(f"Error while syncing product {product.title} (ID: {product.id}): {e}")
-
-                # Update progress bar
-                pbar.update(1)
-
-        logger.info("Completed the synchronization process for all products to WixProduct.")
