@@ -72,7 +72,7 @@ class WixProduct(models.Model):
     name = models.CharField(max_length=255)  # Product name
     description = models.TextField(blank=True, null=True)  # Product description
     product_image_url = models.TextField(blank=True, null=True)  # Product image URL(s)
-    collection = models.ForeignKey(Collection, related_name="wix_products", on_delete=models.CASCADE)  # Collection link
+    collections = models.ManyToManyField(Collection, related_name="wix_products")  # Allow multiple collections
     sku = models.CharField(max_length=100, blank=True, null=True)  # SKU
     ribbon = models.CharField(max_length=50, blank=True, null=True)  # Promotional label, like "sale"
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Product price

@@ -41,14 +41,18 @@ class ProductInlineInCollection(admin.TabularInline):
 
 
 class WixProductInline(admin.TabularInline):
-    model = WixProduct
+    model = WixProduct.collections.through  # This links the many-to-many relationship
     extra = 0
-    fields = ['handle_id', 'name', 'price', 'created_at', 'updated_at']
-    readonly_fields = ['handle_id', 'name', 'price', 'created_at', 'updated_at']
-    can_delete = False
+    fields = ['get_wixproduct_link']
+    readonly_fields = ['get_wixproduct_link']
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('collection')
+    def get_wixproduct_link(self, obj):
+        wixproduct = obj.wixproduct
+        url = reverse('admin:agent_wixproduct_change', args=[wixproduct.id])
+        logger.debug(f"WixProductInline: get_wixproduct_link for WixProduct {wixproduct.name}")
+        return format_html('<a href="{}">{}</a>', url, wixproduct.name)
+
+    get_wixproduct_link.short_description = 'Wix Product'
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -111,11 +115,11 @@ class WixProductAdmin(admin.ModelAdmin):
         'handle_id', 'name', 'price', 'ribbon', 'inventory', 'visible', 'get_collections', 'created_at', 'updated_at'
     ]
     search_fields = ['name', 'handle_id', 'price', 'sku']
-    list_filter = ['created_at', 'updated_at', 'collection', 'visible', 'inventory']
+    list_filter = ['created_at', 'updated_at', 'collections', 'visible', 'inventory']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('handle_id', 'field_type', 'name', 'description', 'product_image_url', 'collection', 'sku', 'ribbon', 'price', 'surcharge', 'visible', 'inventory', 'discount_mode', 'discount_value', 'weight', 'cost')
+            'fields': ('handle_id', 'field_type', 'name', 'description', 'product_image_url', 'collections', 'sku', 'ribbon', 'price', 'surcharge', 'visible', 'inventory', 'discount_mode', 'discount_value', 'weight', 'cost')
         }),
         ('Product Options', {
             'fields': (
@@ -146,11 +150,10 @@ class WixProductAdmin(admin.ModelAdmin):
     )
 
     def get_collections(self, obj):
-        collection = obj.collection
-        if collection:
-            link = format_html('<a href="{}">{}</a>', reverse('admin:agent_collection_change', args=[collection.id]), collection.title)
-            return link
-        return "-"
+        # Since it's ManyToMany, we loop through each collection and generate links
+        collections = obj.collections.all()
+        links = [format_html('<a href="{}">{}</a>', reverse('admin:agent_collection_change', args=[c.id]), c.title) for c in collections]
+        return format_html(", ".join(links)) if links else "-"
 
     get_collections.short_description = 'Collections'
 
