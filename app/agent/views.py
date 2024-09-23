@@ -6,7 +6,7 @@ from .forms import CollectionSelectForm
 import csv
 
 class WixProductListView(FormView):
-    template_name = 'wixproduct_list.html'
+    template_name = 'agent/wixproduct_list.html'
     form_class = CollectionSelectForm
 
     def form_valid(self, form):
