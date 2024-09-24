@@ -65,7 +65,7 @@ class Command(BaseCommand):
                             logger.info(f"{'Created' if created else 'Updated'} WixProduct for: {product.title} (ID: {product.id})")
 
                     # Now handle the remaining options from the first variant and all options from subsequent variants
-                    option_counter = 1  # Start after the first option
+                    option_counter = 0  # Start after the first option
 
                     for variant_idx, variant in enumerate(variants):
                         for option_idx, option in enumerate(variant.options.all()):
