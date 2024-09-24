@@ -39,7 +39,7 @@ class Command(BaseCommand):
                                 'name': product.title,
                                 'description': product.description,
                                 'price': first_variant.price,  # Using the first variant's price
-                                'product_image_url': ';'.join([image.url for image in product.images.all()]),
+                                'product_image_url': ';'.join(set(image.url for image in product.images.all())),
                                 'ribbon': 'New',  # Set ribbon to 'New'
                                 'inventory': 'InStock',  # Inventory status
                                 'visible': True,
