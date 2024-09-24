@@ -225,6 +225,8 @@ def get_or_update_product_info(product_url):
                     # Add the image to the variant's images many-to-many relationship
                     variant_obj.images.add(variant_image_obj)
                     logger.info(f"Image {variant_image_url} linked to variant: {variant_obj} for option {option_value}")
+                    logger.info(f"Image details: ID={variant_image_obj.id}, URL={variant_image_obj.url}, Alt Text={variant_image_obj.alt_text}, Product={variant_image_obj.product.title}")
+                    logger.info(f"Image was {'created' if created else 'updated'}")
 
         product_obj.allow_update = False
         product_obj.save()
