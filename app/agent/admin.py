@@ -126,7 +126,9 @@ class OptionCategoryAdmin(admin.ModelAdmin):
 
 class WixProductAdmin(admin.ModelAdmin):
     list_display = [
-        'handle_id', 'name', 'field_type', 'price', 'ribbon', 'inventory', 'visible', 'get_collections', 'created_at', 'updated_at'
+        'handle_id', 'name', 'field_type', 'price', 'ribbon', 'inventory', 'visible', 'get_collections', 
+        'product_option_name_1', 'product_option_type_1', 'product_option_description_1',
+        'created_at', 'updated_at'
     ]
     search_fields = ['name', 'handle_id', 'price', 'sku']
     list_filter = ['created_at', 'updated_at', 'field_type', 'collections', 'visible', 'inventory']
