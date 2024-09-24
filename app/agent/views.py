@@ -21,7 +21,7 @@ class WixProductListView(TemplateView):
         logger.debug("POST request received.")
         form = CollectionSelectForm(request.POST)
         wix_products = None
-        collection = None  # Initialize collection to None for logging
+        collection = None
 
         logger.debug("Form submitted with POST data: %s", request.POST)
 
@@ -36,11 +36,26 @@ class WixProductListView(TemplateView):
             # Check if export to CSV button was pressed
             if 'export_csv' in request.POST:
                 logger.debug("Export to CSV button clicked.")
-                return self.export_to_csv(wix_products)
+                logger.debug("Request POST data during export: %s", request.POST)  # Log the entire POST data
+                logger.debug("Collection passed for export: %s (ID: %s)", collection.title, collection.id)
+                return self.export_to_csv(collection, wix_products)
         else:
+            # Handle the case where 'export_csv' is clicked but the form is not valid
             logger.debug("Form is invalid. Errors: %s", form.errors)
 
-        # Pass the form, wix_products, and collection to the template
+            if 'export_csv' in request.POST:
+                logger.debug("Export to CSV attempted with invalid form data.")
+                logger.debug("Request POST data during failed export: %s", request.POST)
+
+            if 'export_csv' in request.POST and 'collection_id' in request.POST:
+                collection_id = request.POST.get('collection_id')
+                collection = Collection.objects.get(id=collection_id)
+                wix_products = WixProduct.objects.filter(collections=collection)
+
+                logger.debug("Exporting products to CSV for collection: %s", collection.title)
+                return self.export_to_csv(collection, wix_products)
+
+        # Pass the form and wix_products to the template
         logger.debug("Rendering response with form, wix_products, and collection.")
         return self.render_to_response({
             'form': form,
@@ -48,7 +63,7 @@ class WixProductListView(TemplateView):
             'collection': collection  # Add collection to the context
         })
 
-    def export_to_csv(self, wix_products):
+    def export_to_csv(self, collection, wix_products):
         """
         Export the selected products and their variants to a CSV file following the Wix format.
         """
