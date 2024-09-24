@@ -119,7 +119,7 @@ class Command(BaseCommand):
 
                             # Sync the variant as a WixProduct with field_type 'Variant'
                             variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=f"hbm_{product.pk}_variant_{idx}",  # Unique handle for each variant
+                                handle_id=f"hbm_{product.pk}_{idx}",  # Unique handle for each variant
                                 field_type='Variant',
                                 sku=f"hbm_{product.pk}_{idx}",  # Variant SKU (starting from 1)
                                 defaults={
