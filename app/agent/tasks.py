@@ -216,7 +216,7 @@ def get_or_update_product_info(product_url):
                     # Create or update the Image for the variant
                     variant_image_obj, _ = Image.objects.update_or_create(
                         product=product_obj,  # Associate with the product
-                        url: variant_image_url,  # URL of the variant image
+                        url=variant_image_url,  # URL of the variant image
                         defaults={
                             'alt_text': f"{title} - {option_value}"  # Use the variant's option value as alt text
                         }
