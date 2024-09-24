@@ -175,7 +175,7 @@ def get_or_update_product_info(product_url):
 
                         except Exception as e:
                             logger.error(f"Could not find image for variant {option.text}. Error: {e}")
-                            images_list.append(main_image_url)  # Default to main image if variant image not found
+                            images_list.append(variant_image_url)  # Default to main image if variant image not found
 
                     # Store the options, prices, and images in the respective dictionaries
                     all_options[label] = options_list
