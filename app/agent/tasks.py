@@ -103,10 +103,8 @@ def get_or_update_product_info(product_url):
         if main_image_url:
             Image.objects.update_or_create(
                 product=product_obj,
-                defaults={
-                    'url': main_image_url,
-                    'alt_text': title  # You can adjust alt_text if necessary
-                }
+                url=main_image_url,
+                alt_text=title  # You can adjust alt_text if necessary
             )
             logger.info(f"Main image linked to product: {product_obj.title} (URL: {main_image_url})")
         else:
