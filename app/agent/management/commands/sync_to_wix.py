@@ -48,7 +48,6 @@ class Command(BaseCommand):
                                 'weight': None,
                                 'cost': None,
                                 'product_option_name_1': first_option.category.name,
-                                #'product_option_type_1': 'COLOR' if first_option.category.name.lower() in ['color', 'colour', 'shade'] else 'DROP_DOWN',
                                 'product_option_type_1': 'DROP_DOWN',
                                 'product_option_description_1': first_option.value,
                             }
@@ -89,7 +88,6 @@ class Command(BaseCommand):
                                 'weight': None,
                                 'cost': None,
                                 'product_option_name_1': option.category.name,
-                                #'product_option_type_1': 'COLOR' if option.category.name.lower() in ['color', 'colour', 'shade'] else 'DROP_DOWN',
                                 'product_option_type_1': 'DROP_DOWN',
                                 'product_option_description_1': option.value,
                             }
