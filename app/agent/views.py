@@ -94,6 +94,11 @@ class WixProductListView(TemplateView):
             # Get all variants for this product (same handle_id)
             variants = WixProduct.objects.filter(handle_id=product.handle_id, field_type='Variant').order_by('pk')
 
+            # Check if product or any variant has price = 0.0
+            if product.price == 0.0 or any(variant.price == 0.0 for variant in variants):
+                logger.info(f"Skipping product {product.name} with handle_id {product.handle_id} due to price=0.0")
+                continue  # Skip this product if it or any variant has a price of 0.0
+
             # If no variants, write only the product details up to 'cost'
             if not variants.exists():
                 writer.writerow([
