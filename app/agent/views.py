@@ -112,7 +112,7 @@ class WixProductListView(TemplateView):
                 # Write product row with combined option descriptions
                 writer.writerow([
                     product.handle_id, 'Product', product.name, product.description, product.product_image_url,
-                    ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
+                    ";".join(set([c.title for c in product.collections.all()])), product.sku, product.ribbon, product.price,
                     product.surcharge, product.visible, product.discount_mode, product.discount_value, 
                     product.inventory, product.weight, product.cost,
                     product.product_option_name_1, product.product_option_type_1, unique_option_descriptions,  # unique list of option descriptions
@@ -123,7 +123,7 @@ class WixProductListView(TemplateView):
                 for variant in variants:
                     writer.writerow([
                         variant.handle_id, 'Variant', None, None, None,
-                        ";".join([c.title for c in variant.collections.all()]), variant.sku, variant.ribbon, variant.price,
+                        "", variant.sku, "", variant.price,
                         variant.surcharge, variant.visible, variant.discount_mode, variant.discount_value, 
                         variant.inventory, variant.weight, variant.cost,
                         "", "", variant.product_option_description_1,  # Empty name/type, variant description
