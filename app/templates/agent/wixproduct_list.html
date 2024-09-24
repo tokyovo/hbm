@@ -33,6 +33,8 @@
           <th>SKU</th>
           <th>Ribbon</th>
           <th>Inventory</th>
+          <th>Option Name 1</th> <!-- New column for product_option_name_1 -->
+          <th>Option Description 1</th> <!-- New column for product_option_description_1 -->
         </tr>
       </thead>
       <tbody>
@@ -45,6 +47,8 @@
             <td>{{ product.sku }}</td>
             <td>{{ product.ribbon }}</td>
             <td>{{ product.inventory }}</td>
+            <td>{{ product.product_option_name_1 }}</td> <!-- Display product_option_name_1 -->
+            <td>{{ product.product_option_description_1 }}</td> <!-- Display product_option_description_1 -->
           </tr>
         {% endfor %}
       </tbody>
