@@ -172,8 +172,8 @@ class WixProductAdmin(admin.ModelAdmin):
     get_collections.short_description = 'Collections'
 
 class ImageAdmin(admin.ModelAdmin):
-    list_display = ['product', 'url', 'alt_text']
-    search_fields = ['product__title', 'url', 'alt_text']
+    list_display = ['pk', 'product', 'url', 'alt_text']
+    search_fields = ['product__title', 'pk', 'url', 'alt_text']
     list_filter = ['product']
 
 # Register models in the Django admin
