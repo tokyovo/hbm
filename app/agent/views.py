@@ -119,6 +119,16 @@ class WixProductListView(TemplateView):
                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
                 ])
 
+                # Write product as 1st variant
+                writer.writerow([
+                    product.handle_id, 'Variant', product.name, product.description, product.product_image_url,
+                    ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
+                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
+                    product.inventory, product.weight, product.cost,
+                    "", "", unique_option_descriptions,  # unique list of option descriptions
+                    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+                ])
+
                 # Write variants for the product
                 for variant in variants:
                     writer.writerow([
