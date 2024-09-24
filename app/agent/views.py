@@ -106,7 +106,7 @@ class WixProductListView(TemplateView):
             else:
                 # Create a unique list of option descriptions from the product and variants
                 product_and_variants = [product] + list(variants)
-                option_descriptions = [pv.product_option_description_1 for pv in product_and_variants if pv.product_option_description_1]
+                option_descriptions = set([pv.product_option_description_1 for pv in product_and_variants if pv.product_option_description_1])
                 unique_option_descriptions = ";".join(option_descriptions)
 
                 # Write product row with combined option descriptions
@@ -116,16 +116,6 @@ class WixProductListView(TemplateView):
                     product.surcharge, product.visible, product.discount_mode, product.discount_value, 
                     product.inventory, product.weight, product.cost,
                     product.product_option_name_1, product.product_option_type_1, unique_option_descriptions,  # unique list of option descriptions
-                    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
-                ])
-
-                # Write product as 1st variant
-                writer.writerow([
-                    product.handle_id, 'Variant', product.name, product.description, product.product_image_url,
-                    ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
-                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
-                    product.inventory, product.weight, product.cost,
-                    "", "", product.product_option_description_1,  # unique list of option descriptions
                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
                 ])
 

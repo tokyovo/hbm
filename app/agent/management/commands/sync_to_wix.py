@@ -69,10 +69,6 @@ class Command(BaseCommand):
 
                     for variant_idx, variant in enumerate(variants):
                         for option_idx, option in enumerate(variant.options.all()):
-                            # Skip the first option of the first variant (used for the product)
-                            if variant_idx == 0 and option_idx == 0:
-                                continue
-
                             option_counter += 1
 
                             # Sync the variant as a WixProduct with field_type 'Variant'
