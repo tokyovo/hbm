@@ -144,7 +144,7 @@ def get_or_update_product_info(product_url):
                         select.select_by_visible_text(option.text)
 
                         # Wait for the price and image to update
-                        time.sleep(2)  # Adjust if necessary
+                        time.sleep(5)  # Adjust if necessary
 
                         # Find and clean up the price element
                         try:
