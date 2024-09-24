@@ -1,6 +1,6 @@
-import csv
 from django.http import HttpResponse
 from django.views.generic import TemplateView
+import csv
 from .forms import CollectionSelectForm
 from .models import WixProduct, Collection
 
@@ -9,27 +9,25 @@ class WixProductListView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         form = CollectionSelectForm()
-        return self.render_to_response({'form': form})
+        return self.render_to_response({'form': form, 'wix_products': None})
 
     def post(self, request, *args, **kwargs):
         form = CollectionSelectForm(request.POST)
+        wix_products = None
+
         if form.is_valid():
             collection = form.cleaned_data['collection']
             wix_products = WixProduct.objects.filter(collections=collection)
 
-            # Check if export to CSV
+            # Check if export to CSV button was pressed
             if 'export_csv' in request.POST:
                 return self.export_to_csv(collection, wix_products)
 
-            # Pass the selected collection and products back to the template
-            return self.render_to_response({
-                'form': form,
-                'wix_products': wix_products,
-                'collection': collection
-            })
-
-        # If form is not valid, render the form again
-        return self.render_to_response({'form': form})
+        # Pass the form and wix_products to the template
+        return self.render_to_response({
+            'form': form,
+            'wix_products': wix_products
+        })
 
     def export_to_csv(self, collection, wix_products):
         """
@@ -39,6 +37,7 @@ class WixProductListView(TemplateView):
         response['Content-Disposition'] = f'attachment; filename="{collection.title}_wix_products.csv"'
 
         writer = csv.writer(response)
+        # Write the CSV header
         writer.writerow([
             "handleId", "fieldType", "name", "description", "productImageUrl", "collection", "sku", "ribbon", "price",
             "surcharge", "visible", "discountMode", "discountValue", "inventory", "weight", "cost",
@@ -55,6 +54,7 @@ class WixProductListView(TemplateView):
             "customTextField1", "customTextCharLimit1", "customTextMandatory1", "brand"
         ])
 
+        # Write the product and variant data
         for product in wix_products:
             # Write the main product row
             writer.writerow([
