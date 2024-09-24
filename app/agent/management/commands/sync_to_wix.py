@@ -26,7 +26,7 @@ class Command(BaseCommand):
                 try:
                     # Sync the main product as a WixProduct
                     wix_product, created = WixProduct.objects.update_or_create(
-                        handle_id=str(product.id),  # Using the Product's PK as the handle_id
+                        handle_id=f"hbm_{product.pk}",  # Using 'hbm_{product.pk}' as the handle_id
                         defaults={
                             'field_type': 'Product',  # Main product
                             'name': product.title,
@@ -53,10 +53,15 @@ class Command(BaseCommand):
                     else:
                         logger.info(f"Updated WixProduct for: {product.title} (ID: {product.id})")
 
-                    # Handle product variants
+                    # Handle product variants, skipping the first variant
                     variants = Variant.objects.filter(product=product)
                     if variants.exists():
                         for idx, variant in enumerate(variants):
+                            # Skip the first variant (assumed to be the product itself)
+                            if idx == 0:
+                                logger.info(f"Skipping first variant for product: {product.title} (ID: {product.id})")
+                                continue
+
                             # Determine productOptionType
                             option_values = variant.options.all()
                             option_names = []
@@ -68,7 +73,7 @@ class Command(BaseCommand):
                                 # Add the option name, type, and description to the lists
                                 option_names.append(option.category.name)
                                 option_descriptions.append(option.value)
-                                
+
                                 # Check for color-related options
                                 if option.category.name.lower() in ['color', 'colour', 'shade']:
                                     option_types.append('COLOR')
@@ -77,13 +82,13 @@ class Command(BaseCommand):
 
                             # Sync the variant as a WixProduct with field_type 'Variant'
                             variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=product.id,
+                                handle_id=f"hbm_{product.pk}_variant_{idx}",
                                 defaults={
                                     'field_type': 'Variant',
                                     'name': f"{product.title} - {variant}",  # Variant title
                                     'description': product.description,
                                     'price': variant.price,
-                                    'sku': f"{product.id}_{idx + 1}",  # Variant SKU (starts from 1)
+                                    'sku': f"{product.id}_{idx}",  # Variant SKU (starting from 1)
                                     'ribbon': 'sale',  # Set ribbon to 'sale'
                                     'inventory': 'InStock',  # Inventory status
                                     'visible': True,
@@ -113,13 +118,13 @@ class Command(BaseCommand):
                             )
 
                             # Sync the variant's collections to the WixProduct
-                            variant_wix_product.collections.set(product.collections.all())  # Fix here: using the many-to-many relationship
+                            variant_wix_product.collections.set(product.collections.all())
                             variant_wix_product.save()
 
                             if created:
-                                logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
+                                logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx}")
                             else:
-                                logger.info(f"Updated WixProduct Variant for: {product.title} - Variant {idx + 1}")
+                                logger.info(f"Updated WixProduct Variant for: {product.title} - Variant {idx}")
 
                 except Exception as e:
                     logger.error(f"Error syncing product {product.title} (ID: {product.id}): {e}")
