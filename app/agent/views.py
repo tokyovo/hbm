@@ -125,7 +125,7 @@ class WixProductListView(TemplateView):
                     ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
                     product.surcharge, product.visible, product.discount_mode, product.discount_value, 
                     product.inventory, product.weight, product.cost,
-                    "", "", unique_option_descriptions,  # unique list of option descriptions
+                    "", "", product.product_option_description_1,  # unique list of option descriptions
                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
                 ])
 
