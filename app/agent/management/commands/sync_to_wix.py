@@ -95,7 +95,7 @@ class Command(BaseCommand):
                             }
 
                             variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=f"hbm_{product.pk}_{option_counter}",  # Unique handle for each option/variant
+                                handle_id=f"hbm_{product.pk}",  # Unique handle for each option/variant
                                 field_type='Variant',
                                 sku=f"hbm_{product.pk}_{option_counter}",  # Unique SKU for each variant
                                 defaults=variant_wix_product_defaults
