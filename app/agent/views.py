@@ -9,10 +9,17 @@ class WixProductListView(FormView):
     template_name = 'agent/wixproduct_list.html'
     form_class = CollectionSelectForm
 
+    def get_context_data(self, **kwargs):
+        # Add wix_products to context, defaulting to None if not present
+        context = super().get_context_data(**kwargs)
+        context['wix_products'] = kwargs.get('wix_products', None)
+        return context
+
     def form_valid(self, form):
         collection = form.cleaned_data['collection']
         wix_products = WixProduct.objects.filter(collections=collection)
 
+        # Ensure wix_products is passed to context
         context = self.get_context_data(form=form, wix_products=wix_products, collection=collection)
         return self.render_to_response(context)
 
