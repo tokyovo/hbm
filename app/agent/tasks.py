@@ -126,7 +126,7 @@ def get_or_update_product_info(product_url):
         if select_containers:
             for container in select_containers:
                 try:
-                    # Find the option category label (e.g., Size, Color) and the dropdown
+                    # Find the option category label (e.g., Size, Color) and dropdown
                     label = container.find_element(By.TAG_NAME, 'label').text.strip()
                     select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
                     logger.info(f"Option category found: {label}")
@@ -147,12 +147,12 @@ def get_or_update_product_info(product_url):
                         # Select the option by visible text
                         select.select_by_visible_text(option.text)
 
-                        # Wait for the price and image to update using WebDriverWait
+                        # Wait for the price and image to update
+                        time.sleep(5)  # Adjust if necessary
+
+                        # Find and clean up the price element
                         try:
-                            # Wait for the price to update after selecting the option
-                            price_element = WebDriverWait(driver, 10).until(
-                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money'))
-                            )
+                            price_element = driver.find_element(By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money')
                             price_str = price_element.text.strip()
                             logger.info(f"Raw price string collected for option {option.text}: {price_str}")
 
@@ -168,22 +168,8 @@ def get_or_update_product_info(product_url):
 
                         # Re-fetch the image URL for the selected variant (if different)
                         try:
-                            # Wait for the image to update after selecting the option
-                            WebDriverWait(driver, 10).until(
-                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.image__container img'))
-                            )
-
-                            # Find the noscript tag and extract the src attribute from the img tag inside it
-                            noscript_tag = soup.find('noscript')
-                            if noscript_tag:
-                                noscript_soup = BeautifulSoup(noscript_tag.string, 'html.parser')  # Parse the string inside <noscript>
-                                variant_image_tag = noscript_soup.find('img')
-                                variant_image_url = 'https:' + variant_image_tag['src'] if variant_image_tag and 'src' in variant_image_tag.attrs else None
-                                logger.info(f"Variant Image URL from noscript: {variant_image_url}")
-                            else:
-                                variant_image_url = None
-                                logger.info("No noscript tag found.")
-
+                            variant_image_tag = soup.find('div', class_='image__container').find('img')
+                            variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
                             logger.info(f"Variant Image URL for option {option.text}: {variant_image_url}")
                             images_list.append(variant_image_url)
 
