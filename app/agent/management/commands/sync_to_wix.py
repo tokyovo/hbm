@@ -117,5 +117,14 @@ class Command(BaseCommand):
                             variant_wix_product.save()
 
                             if created:
-                                logger.debug(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
+                                logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx + 1}")
                             else:
+                                logger.info(f"Updated WixProduct Variant for: {product.title} - Variant {idx + 1}")
+
+                except Exception as e:
+                    logger.error(f"Error syncing product {product.title} (ID: {product.id}): {e}")
+
+                # Update the progress bar after each product is processed
+                pbar.update(1)
+
+        logger.info("Synchronization process completed for all products.")
