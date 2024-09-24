@@ -53,7 +53,7 @@ class Command(BaseCommand):
                             'description': product.description,
                             'price': first_variant.price,  # Update with first variant's price
                             'product_image_url': ';'.join([image.url for image in product.images.all()]),
-                            'ribbon': 'sale',  # Set ribbon to 'sale'
+                            'ribbon': 'New',  # Set ribbon to 'New'
                             'inventory': 'InStock',  # Inventory status
                             'visible': True,
                             'discount_mode': None,
@@ -126,7 +126,7 @@ class Command(BaseCommand):
                                     'name': f"{product.title}",  # Variant title
                                     'description': product.description,
                                     'price': variant.price,
-                                    'ribbon': 'sale',  # Set ribbon to 'sale'
+                                    'ribbon': 'New',  # Set ribbon to 'New'
                                     'inventory': 'InStock',  # Inventory status
                                     'visible': True,
                                     'discount_mode': None,
