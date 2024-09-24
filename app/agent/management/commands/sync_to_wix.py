@@ -86,7 +86,7 @@ class Command(BaseCommand):
                                 field_type='Variant',
                                 sku=f"hbm_{product.id}_{idx}",  # Variant SKU (starting from 1)
                                 defaults={
-                                    'name': f"{product.title} - {variant}",  # Variant title
+                                    'name': f"{product.title}",  # Variant title
                                     'description': product.description,
                                     'price': variant.price,
                                     'ribbon': 'sale',  # Set ribbon to 'sale'
