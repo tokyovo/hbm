@@ -28,7 +28,7 @@ class OptionCategory(models.Model):
     """
     Represents categories like "Size", "Color", etc.
     """
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=521, unique=True)
 
     def __str__(self):
         return self.name
@@ -39,7 +39,7 @@ class OptionValue(models.Model):
     Represents values like "Small", "Large" for Size, or "Red", "Blue" for Color.
     """
     category = models.ForeignKey(OptionCategory, related_name="values", on_delete=models.CASCADE)
-    value = models.CharField(max_length=50)
+    value = models.CharField(max_length=521)
 
     class Meta:
         unique_together = ('category', 'value')
@@ -66,46 +66,46 @@ class Variant(models.Model):
 
 class WixProduct(models.Model):
     # Basic product fields
-    handle_id = models.CharField(max_length=50)  # handleId
-    field_type = models.CharField(max_length=50, default="Product")  # fieldType
+    handle_id = models.CharField(max_length=521)  # handleId
+    field_type = models.CharField(max_length=521, default="Product")  # fieldType
     name = models.CharField(max_length=1024)  # Product name
     description = models.TextField(blank=True, null=True)  # Product description
     product_image_url = models.TextField(blank=True, null=True)  # Product image URL(s)
     collections = models.ManyToManyField(Collection, related_name="wix_products")  # Allow multiple collections
-    sku = models.CharField(max_length=100, blank=True, null=True)  # SKU
-    ribbon = models.CharField(max_length=50, blank=True, null=True)  # Promotional label, like "sale"
+    sku = models.CharField(max_length=1024, blank=True, null=True)  # SKU
+    ribbon = models.CharField(max_length=521, blank=True, null=True)  # Promotional label, like "sale"
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Product price
     surcharge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Additional surcharge if any
     visible = models.BooleanField(default=True)  # Whether the product is visible
-    discount_mode = models.CharField(max_length=50, blank=True, null=True)  # Discount mode
+    discount_mode = models.CharField(max_length=521, blank=True, null=True)  # Discount mode
     discount_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Discount value
-    inventory = models.CharField(max_length=50, default="InStock")  # Inventory status
+    inventory = models.CharField(max_length=521, default="InStock")  # Inventory status
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Product weight
     cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Product cost
 
     # Product Options (Up to 6)
     product_option_name_1 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName1
-    product_option_type_1 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType1 (e.g., COLOR or DROP_DOWN)
+    product_option_type_1 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType1 (e.g., COLOR or DROP_DOWN)
     product_option_description_1 = models.TextField(blank=True, null=True)  # productOptionDescription1
     
     product_option_name_2 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName2
-    product_option_type_2 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType2
+    product_option_type_2 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType2
     product_option_description_2 = models.TextField(blank=True, null=True)  # productOptionDescription2
     
     product_option_name_3 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName3
-    product_option_type_3 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType3
+    product_option_type_3 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType3
     product_option_description_3 = models.TextField(blank=True, null=True)  # productOptionDescription3
     
     product_option_name_4 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName4
-    product_option_type_4 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType4
+    product_option_type_4 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType4
     product_option_description_4 = models.TextField(blank=True, null=True)  # productOptionDescription4
     
     product_option_name_5 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName5
-    product_option_type_5 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType5
+    product_option_type_5 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType5
     product_option_description_5 = models.TextField(blank=True, null=True)  # productOptionDescription5
     
     product_option_name_6 = models.CharField(max_length=1024, blank=True, null=True)  # productOptionName6
-    product_option_type_6 = models.CharField(max_length=50, blank=True, null=True)  # productOptionType6
+    product_option_type_6 = models.CharField(max_length=521, blank=True, null=True)  # productOptionType6
     product_option_description_6 = models.TextField(blank=True, null=True)  # productOptionDescription6
 
     # Additional Info (Up to 6)
@@ -133,7 +133,7 @@ class WixProduct(models.Model):
     custom_text_mandatory_1 = models.BooleanField(default=False)  # customTextMandatory1
 
     # Branding
-    brand = models.CharField(max_length=100, blank=True, null=True)  # Product brand
+    brand = models.CharField(max_length=1024, blank=True, null=True)  # Product brand
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
