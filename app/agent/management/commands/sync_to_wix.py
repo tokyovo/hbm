@@ -77,7 +77,7 @@ class Command(BaseCommand):
 
                             # Sync the variant as a WixProduct with field_type 'Variant'
                             variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=f"{product.id}_variant_{idx}",
+                                handle_id=product.id,
                                 defaults={
                                     'field_type': 'Variant',
                                     'name': f"{product.title} - {variant}",  # Variant title
