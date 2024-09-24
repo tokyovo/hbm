@@ -1,29 +1,46 @@
+import logging
 from django.http import HttpResponse
 from django.views.generic import TemplateView
-import csv
 from .forms import CollectionSelectForm
 from .models import WixProduct, Collection
+import csv
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class WixProductListView(TemplateView):
     template_name = 'agent/wixproduct_list.html'
 
     def get(self, request, *args, **kwargs):
+        logger.debug("GET request received.")
         form = CollectionSelectForm()
+        logger.debug("Empty form initialized.")
         return self.render_to_response({'form': form, 'wix_products': None})
 
     def post(self, request, *args, **kwargs):
+        logger.debug("POST request received.")
         form = CollectionSelectForm(request.POST)
         wix_products = None
 
+        logger.debug("Form submitted with POST data: %s", request.POST)
+
         if form.is_valid():
+            logger.debug("Form is valid.")
             collection = form.cleaned_data['collection']
+            logger.debug("Collection selected: %s (ID: %s)", collection.title, collection.id)
+
             wix_products = WixProduct.objects.filter(collections=collection)
+            logger.debug("Wix products retrieved: %d products found.", wix_products.count())
 
             # Check if export to CSV button was pressed
             if 'export_csv' in request.POST:
+                logger.debug("Export to CSV button clicked.")
                 return self.export_to_csv(collection, wix_products)
+        else:
+            logger.debug("Form is invalid. Errors: %s", form.errors)
 
         # Pass the form and wix_products to the template
+        logger.debug("Rendering response with form and wix_products.")
         return self.render_to_response({
             'form': form,
             'wix_products': wix_products
