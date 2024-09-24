@@ -92,7 +92,7 @@ class WixProductListView(TemplateView):
         # Write the product and variant data
         for product in wix_products.filter(field_type='Product'):
             # Get all variants for this product (same handle_id)
-            variants = WixProduct.objects.filter(handle_id=product.handle_id, field_type='Variant')
+            variants = WixProduct.objects.filter(handle_id=product.handle_id, field_type='Variant').order_by('pk')
 
             # If no variants, write only the product details up to 'cost'
             if not variants.exists():
