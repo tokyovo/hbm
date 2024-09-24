@@ -102,8 +102,8 @@ class CollectionAdmin(admin.ModelAdmin):
 
 
 class VariantAdmin(admin.ModelAdmin):
-    list_display = ['product', 'price', 'get_options']
-    search_fields = ['product__title', 'price']
+    list_display = ['pk', 'product', 'price', 'get_options']
+    search_fields = ['product__title', 'pk', 'price']
 
     def get_options(self, obj):
         logger.debug(f"VariantAdmin: get_options for variant {obj.id}")
