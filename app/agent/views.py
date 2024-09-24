@@ -15,12 +15,13 @@ class WixProductListView(TemplateView):
         logger.debug("GET request received.")
         form = CollectionSelectForm()
         logger.debug("Empty form initialized.")
-        return self.render_to_response({'form': form, 'wix_products': None})
+        return self.render_to_response({'form': form, 'wix_products': None, 'collection': None})
 
     def post(self, request, *args, **kwargs):
         logger.debug("POST request received.")
         form = CollectionSelectForm(request.POST)
         wix_products = None
+        collection = None  # Initialize collection to None for logging
 
         logger.debug("Form submitted with POST data: %s", request.POST)
 
@@ -39,11 +40,12 @@ class WixProductListView(TemplateView):
         else:
             logger.debug("Form is invalid. Errors: %s", form.errors)
 
-        # Pass the form and wix_products to the template
-        logger.debug("Rendering response with form and wix_products.")
+        # Pass the form, wix_products, and collection to the template
+        logger.debug("Rendering response with form, wix_products, and collection.")
         return self.render_to_response({
             'form': form,
-            'wix_products': wix_products
+            'wix_products': wix_products,
+            'collection': collection  # Add collection to the context
         })
 
     def export_to_csv(self, collection, wix_products):
