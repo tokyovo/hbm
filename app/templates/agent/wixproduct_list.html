@@ -9,45 +9,48 @@
   </form>
 
   {% if wix_products %}
-    <h2>Products in Collection: {{ collection.title }}</h2>
-    
-    <!-- Export to CSV Form -->
-    <form method="post" action="">
-      {% csrf_token %}
-      <input type="hidden" name="collection_id" value="{{ collection.id }}">
-      <button type="submit" name="export_csv" class="btn btn-success">Export to CSV</button>
-    </form>
+    {% if wix_products.exists %}
+      <h2>Products in Collection: {{ collection.title }}</h2>
 
-    <!-- Debugging Info -->
-    <p>Wix Products Count: {{ wix_products.count }}</p>
+      <!-- Export to CSV Form -->
+      <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="collection_id" value="{{ collection.id }}">
+        <button type="submit" name="export_csv" class="btn btn-success">Export to CSV</button>
+      </form>
 
-    <table class="table table-bordered mt-3">
-      <thead>
-        <tr>
-          <th>Handle ID</th>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Price</th>
-          <th>SKU</th>
-          <th>Ribbon</th>
-          <th>Inventory</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for product in wix_products %}
+      <p>Wix Products Count: {{ wix_products.count }}</p>
+
+      <table class="table table-bordered mt-3">
+        <thead>
           <tr>
-            <td>{{ product.handle_id }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.description }}</td>
-            <td>{{ product.price }}</td>
-            <td>{{ product.sku }}</td>
-            <td>{{ product.ribbon }}</td>
-            <td>{{ product.inventory }}</td>
+            <th>Handle ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>SKU</th>
+            <th>Ribbon</th>
+            <th>Inventory</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for product in wix_products %}
+            <tr>
+              <td>{{ product.handle_id }}</td>
+              <td>{{ product.name }}</td>
+              <td>{{ product.description }}</td>
+              <td>{{ product.price }}</td>
+              <td>{{ product.sku }}</td>
+              <td>{{ product.ribbon }}</td>
+              <td>{{ product.inventory }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No products found for the selected collection.</p>
+    {% endif %}
   {% else %}
-    <p>No products found or no collection selected.</p>
+    <p>No collection selected.</p>
   {% endif %}
 {% endblock %}

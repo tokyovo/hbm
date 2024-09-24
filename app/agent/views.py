@@ -8,7 +8,12 @@ class WixProductListView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         form = CollectionSelectForm()
-        return self.render_to_response({'form': form})
+        # On GET request, no collection is selected yet, so no products
+        wix_products = None
+        return self.render_to_response({
+            'form': form,
+            'wix_products': wix_products
+        })
 
     def post(self, request, *args, **kwargs):
         form = CollectionSelectForm(request.POST)
@@ -24,4 +29,7 @@ class WixProductListView(TemplateView):
             })
 
         # If form is not valid, render the form again
-        return self.render_to_response({'form': form})
+        return self.render_to_response({
+            'form': form,
+            'wix_products': None
+        })
