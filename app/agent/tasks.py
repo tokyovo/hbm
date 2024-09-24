@@ -164,8 +164,18 @@ def get_or_update_product_info(product_url):
 
                         # Re-fetch the image URL for the selected variant (if different)
                         try:
-                            variant_image_tag = soup.find('div', class_='image__container').find('img')
-                            variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
+                            # Find the noscript tag and extract the src attribute from the img tag inside it
+                            noscript_tag = soup.find('noscript')
+                            if noscript_tag:
+                                noscript_soup = BeautifulSoup(noscript_tag.string, 'html.parser')  # Parse the string inside <noscript>
+                                variant_image_tag = noscript_soup.find('img')
+                                variant_image_url = 'https:' + variant_image_tag['src'] if variant_image_tag and 'src' in variant_image_tag.attrs else None
+                                logger.info(f"Variant Image URL from noscript: {variant_image_url}")
+                            else:
+                                variant_image_url = None
+                                logger.info("No noscript tag found.")
+                            #variant_image_tag = soup.find('div', class_='image__container').find('img')
+                            #variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
                             logger.info(f"Variant Image URL for option {option.text}: {variant_image_url}")
                             images_list.append(variant_image_url)
 
