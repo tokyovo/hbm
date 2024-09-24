@@ -10,6 +10,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from .models import Product, OptionCategory, OptionValue, Variant, Image, Collection
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 base_url = "https://hairbeautymart.com.au"
 
@@ -119,10 +122,11 @@ def get_or_update_product_info(product_url):
 
         select_containers = driver.find_elements(By.CLASS_NAME, 'select-container')
 
+        # If select_containers exist, iterate through each one
         if select_containers:
             for container in select_containers:
                 try:
-                    # Find the option category label (e.g., Size, Color) and dropdown
+                    # Find the option category label (e.g., Size, Color) and the dropdown
                     label = container.find_element(By.TAG_NAME, 'label').text.strip()
                     select_element = container.find_element(By.CSS_SELECTOR, 'select.single-option-selector')
                     logger.info(f"Option category found: {label}")
@@ -143,12 +147,12 @@ def get_or_update_product_info(product_url):
                         # Select the option by visible text
                         select.select_by_visible_text(option.text)
 
-                        # Wait for the price and image to update
-                        time.sleep(5)  # Adjust if necessary
-
-                        # Find and clean up the price element
+                        # Wait for the price and image to update using WebDriverWait
                         try:
-                            price_element = driver.find_element(By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money')
+                            # Wait for the price to update after selecting the option
+                            price_element = WebDriverWait(driver, 10).until(
+                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'p.modal_price.subtitle .current_price .money'))
+                            )
                             price_str = price_element.text.strip()
                             logger.info(f"Raw price string collected for option {option.text}: {price_str}")
 
@@ -164,6 +168,11 @@ def get_or_update_product_info(product_url):
 
                         # Re-fetch the image URL for the selected variant (if different)
                         try:
+                            # Wait for the image to update after selecting the option
+                            WebDriverWait(driver, 10).until(
+                                EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.image__container img'))
+                            )
+
                             # Find the noscript tag and extract the src attribute from the img tag inside it
                             noscript_tag = soup.find('noscript')
                             if noscript_tag:
@@ -174,8 +183,7 @@ def get_or_update_product_info(product_url):
                             else:
                                 variant_image_url = None
                                 logger.info("No noscript tag found.")
-                            #variant_image_tag = soup.find('div', class_='image__container').find('img')
-                            #variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
+
                             logger.info(f"Variant Image URL for option {option.text}: {variant_image_url}")
                             images_list.append(variant_image_url)
 
