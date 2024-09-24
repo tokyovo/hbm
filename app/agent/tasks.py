@@ -148,7 +148,7 @@ def get_or_update_product_info(product_url):
                         select.select_by_visible_text(option.text)
 
                         # Wait for the price and image to update
-                        time.sleep(5)  # Adjust if necessary
+                        time.sleep(2)  # Adjusted to 2 seconds
 
                         # Find and clean up the price element
                         try:
@@ -168,19 +168,23 @@ def get_or_update_product_info(product_url):
 
                         # Re-fetch the image URL for the selected variant (if different)
                         try:
-                            variant_image_tag = soup.find('div', class_='image__container').find('img')
-                            variant_image_url = 'https:' + image_tag['data-zoom-src'] if image_tag and 'data-zoom-src' in image_tag.attrs else None
-                            logger.info(f"Variant Image URL for option {option.text}: {variant_image_url}")
+                            # Retrieve the variant image by the 'data-index' value
+                            data_index = str(select.options.index(option))  # Convert option index to string for matching
+                            variant_image_tag = soup.find('img', {'data-index': data_index})  # Find img tag with matching data-index
+                            variant_image_url = 'https:' + variant_image_tag['data-zoom-src'] if variant_image_tag and 'data-zoom-src' in variant_image_tag.attrs else None
+                            
+                            logger.info(f"Variant Image URL for option {option.text} (data-index={data_index}): {variant_image_url}")
                             images_list.append(variant_image_url)
 
                         except Exception as e:
                             logger.error(f"Could not find image for variant {option.text}. Error: {e}")
-                            images_list.append(variant_image_url)  # Default to main image if variant image not found
+                            images_list.append(variant_image_url)  # Use the current variant image if variant image not found
 
                     # Store the options, prices, and images in the respective dictionaries
                     all_options[label] = options_list
                     all_prices[label] = prices_list
                     all_variant_images[label] = images_list
+
 
                 except Exception as e:
                     logger.error(f"Error processing options for {product_url}: {str(e)}")
