@@ -36,7 +36,7 @@ class WixProductListView(TemplateView):
             # Check if export to CSV button was pressed
             if 'export_csv' in request.POST:
                 logger.debug("Export to CSV button clicked.")
-                return self.export_to_csv(collection, wix_products)
+                return self.export_to_csv(wix_products)
         else:
             logger.debug("Form is invalid. Errors: %s", form.errors)
 
@@ -48,7 +48,7 @@ class WixProductListView(TemplateView):
             'collection': collection  # Add collection to the context
         })
 
-    def export_to_csv(self, collection, wix_products):
+    def export_to_csv(self, wix_products):
         """
         Export the selected products and their variants to a CSV file following the Wix format.
         """
