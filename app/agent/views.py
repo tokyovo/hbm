@@ -71,6 +71,7 @@ class WixProductListView(TemplateView):
         response['Content-Disposition'] = f'attachment; filename="{collection.title}_wix_products.csv"'
 
         writer = csv.writer(response)
+        
         # Write the CSV header
         writer.writerow([
             "handleId", "fieldType", "name", "description", "productImageUrl", "collection", "sku", "ribbon", "price",
@@ -89,51 +90,44 @@ class WixProductListView(TemplateView):
         ])
 
         # Write the product and variant data
-        for product in wix_products:
-            # Write the main product row
-            writer.writerow([
-                product.handle_id, 'Product', product.name, product.description, product.product_image_url,
-                ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
-                product.surcharge, product.visible, product.discount_mode, product.discount_value, 
-                product.inventory, product.weight, product.cost,
-                product.product_option_name_1, product.product_option_type_1, product.product_option_description_1,
-                product.product_option_name_2, product.product_option_type_2, product.product_option_description_2,
-                product.product_option_name_3, product.product_option_type_3, product.product_option_description_3,
-                product.product_option_name_4, product.product_option_type_4, product.product_option_description_4,
-                product.product_option_name_5, product.product_option_type_5, product.product_option_description_5,
-                product.product_option_name_6, product.product_option_type_6, product.product_option_description_6,
-                product.additional_info_title_1, product.additional_info_description_1, 
-                product.additional_info_title_2, product.additional_info_description_2, 
-                product.additional_info_title_3, product.additional_info_description_3,
-                product.additional_info_title_4, product.additional_info_description_4,
-                product.additional_info_title_5, product.additional_info_description_5,
-                product.additional_info_title_6, product.additional_info_description_6,
-                product.custom_text_field_1, product.custom_text_char_limit_1, 
-                product.custom_text_mandatory_1, product.brand
-            ])
-
-            # Write variants associated with the product
+        for product in wix_products.filter(field_type='Product'):
+            # Get all variants for this product (same handle_id)
             variants = WixProduct.objects.filter(handle_id=product.handle_id, field_type='Variant')
-            for variant in variants:
+
+            # If no variants, write only the product details up to 'cost'
+            if not variants.exists():
                 writer.writerow([
-                    variant.handle_id, 'Variant', None, None, None,
-                    ";".join([c.title for c in variant.collections.all()]), variant.sku, variant.ribbon, variant.price,
-                    variant.surcharge, variant.visible, variant.discount_mode, variant.discount_value, 
-                    variant.inventory, variant.weight, variant.cost,
-                    variant.product_option_name_1, variant.product_option_type_1, variant.product_option_description_1,
-                    variant.product_option_name_2, variant.product_option_type_2, variant.product_option_description_2,
-                    variant.product_option_name_3, variant.product_option_type_3, variant.product_option_description_3,
-                    variant.product_option_name_4, variant.product_option_type_4, variant.product_option_description_4,
-                    variant.product_option_name_5, variant.product_option_type_5, variant.product_option_description_5,
-                    variant.product_option_name_6, variant.product_option_type_6, variant.product_option_description_6,
-                    variant.additional_info_title_1, variant.additional_info_description_1,
-                    variant.additional_info_title_2, variant.additional_info_description_2,
-                    variant.additional_info_title_3, variant.additional_info_description_3,
-                    variant.additional_info_title_4, variant.additional_info_description_4,
-                    variant.additional_info_title_5, variant.additional_info_description_5,
-                    variant.additional_info_title_6, variant.additional_info_description_6,
-                    variant.custom_text_field_1, variant.custom_text_char_limit_1, 
-                    variant.custom_text_mandatory_1, variant.brand
+                    product.handle_id, 'Product', product.name, product.description, product.product_image_url,
+                    ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
+                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
+                    product.inventory, product.weight, product.cost,  # Fill remaining columns with empty strings
+                    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
                 ])
+            else:
+                # Create a unique list of option descriptions from the product and variants
+                product_and_variants = [product] + list(variants)
+                option_descriptions = [pv.product_option_description_1 for pv in product_and_variants if pv.product_option_description_1]
+                unique_option_descriptions = ";".join(option_descriptions)
+
+                # Write product row with combined option descriptions
+                writer.writerow([
+                    product.handle_id, 'Product', product.name, product.description, product.product_image_url,
+                    ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
+                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
+                    product.inventory, product.weight, product.cost,
+                    product.product_option_name_1, product.product_option_type_1, unique_option_descriptions,  # unique list of option descriptions
+                    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+                ])
+
+                # Write variants for the product
+                for variant in variants:
+                    writer.writerow([
+                        variant.handle_id, 'Variant', None, None, None,
+                        ";".join([c.title for c in variant.collections.all()]), variant.sku, variant.ribbon, variant.price,
+                        variant.surcharge, variant.visible, variant.discount_mode, variant.discount_value, 
+                        variant.inventory, variant.weight, variant.cost,
+                        "", "", variant.product_option_description_1,  # Empty name/type, variant description
+                        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+                    ])
 
         return response
