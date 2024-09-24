@@ -21,147 +21,90 @@ class Command(BaseCommand):
 
         # Initialize tqdm progress bar
         with tqdm(total=products.count(), desc="Syncing Products", unit="product") as pbar:
-            # Loop through each product and sync with WixProduct
             for product in products:
                 try:
-                    # Handle product variants, and update the main product with the first variant info
+                    # Handle product variants and use the first option of the first variant for the product
                     variants = Variant.objects.filter(product=product)
                     first_variant = variants.first()
 
-                    # Use the first variant's information for the main product
                     if first_variant:
-                        # Gather option details for the first variant (product)
                         option_values = first_variant.options.all()
-                        option_names = []
-                        option_types = []
-                        option_descriptions = []
 
-                        # Processing options for the first variant (which is treated as the main product)
-                        for option in option_values:
-                            option_names.append(option.category.name)
-                            option_descriptions.append(option.value)
+                        # Use the first option for the main product
+                        first_option = option_values.first()
 
-                            # Check if the option is color-related or dropdown
-                            if option.category.name.lower() in ['color', 'colour', 'shade']:
-                                option_types.append('COLOR')
-                            else:
-                                option_types.append('DROP_DOWN')
+                        if first_option:
+                            # Update main product (first option considered as the product)
+                            wix_product_defaults = {
+                                'name': product.title,
+                                'description': product.description,
+                                'price': first_variant.price,  # Using the first variant's price
+                                'product_image_url': ';'.join([image.url for image in product.images.all()]),
+                                'ribbon': 'New',  # Set ribbon to 'New'
+                                'inventory': 'InStock',  # Inventory status
+                                'visible': True,
+                                'discount_mode': None,
+                                'discount_value': 0,
+                                'weight': None,
+                                'cost': None,
+                                'product_option_name_1': first_option.category.name,
+                                #'product_option_type_1': 'COLOR' if first_option.category.name.lower() in ['color', 'colour', 'shade'] else 'DROP_DOWN',
+                                'product_option_type_1': 'DROP_DOWN',
+                                'product_option_description_1': first_option.value,
+                            }
 
-                        # Update the main product as a WixProduct, including options
-                        wix_product_defaults = {
-                            'name': product.title,
-                            'description': product.description,
-                            'price': first_variant.price,  # Update with first variant's price
-                            'product_image_url': ';'.join([image.url for image in product.images.all()]),
-                            'ribbon': 'New',  # Set ribbon to 'New'
-                            'inventory': 'InStock',  # Inventory status
-                            'visible': True,
-                            'discount_mode': None,
-                            'discount_value': 0,
-                            'weight': None,
-                            'cost': None,
-                            'product_option_name_1': option_names[0] if len(option_names) > 0 else None,
-                            'product_option_type_1': option_types[0] if len(option_types) > 0 else None,
-                            'product_option_description_1': option_descriptions[0] if len(option_descriptions) > 0 else None,
-                            'product_option_name_2': option_names[1] if len(option_names) > 1 else None,
-                            'product_option_type_2': option_types[1] if len(option_types) > 1 else None,
-                            'product_option_description_2': option_descriptions[1] if len(option_descriptions) > 1 else None,
-                            'product_option_name_3': option_names[2] if len(option_names) > 2 else None,
-                            'product_option_type_3': option_types[2] if len(option_types) > 2 else None,
-                            'product_option_description_3': option_descriptions[2] if len(option_descriptions) > 2 else None,
-                            'product_option_name_4': option_names[3] if len(option_names) > 3 else None,
-                            'product_option_type_4': option_types[3] if len(option_types) > 3 else None,
-                            'product_option_description_4': option_descriptions[3] if len(option_descriptions) > 3 else None,
-                            'product_option_name_5': option_names[4] if len(option_names) > 4 else None,
-                            'product_option_type_5': option_types[4] if len(option_types) > 4 else None,
-                            'product_option_description_5': option_descriptions[4] if len(option_descriptions) > 4 else None,
-                            'product_option_name_6': option_names[5] if len(option_names) > 5 else None,
-                            'product_option_type_6': option_types[5] if len(option_types) > 5 else None,
-                            'product_option_description_6': option_descriptions[5] if len(option_descriptions) > 5 else None,
-                        }
-
-                        # Sync the main product as a WixProduct
-                        wix_product, created = WixProduct.objects.update_or_create(
-                            handle_id=f"hbm_{product.pk}",  # Using 'hbm_{product.pk}' as the handle_id
-                            field_type='Product',  # Main product
-                            sku=f"hbm_{product.pk}_0",  # SKU for main product
-                            defaults=wix_product_defaults
-                        )
-
-                        # Sync the product's collections to the WixProduct
-                        wix_product.collections.set(product.collections.all())
-                        wix_product.save()
-
-                        if created:
-                            logger.info(f"Created WixProduct for: {product.title} (ID: {product.id})")
-                        else:
-                            logger.info(f"Updated WixProduct for: {product.title} (ID: {product.id})")
-                    
-                    # Sync remaining variants (excluding the first one)
-                    if variants.exists():
-                        for idx, variant in enumerate(variants[1:], start=1):
-                            option_values = variant.options.all()
-                            option_names = []
-                            option_types = []
-                            option_descriptions = []
-
-                            # Handling multiple product options for WixProduct
-                            for option in option_values:
-                                # Add the option name, type, and description to the lists
-                                option_names.append(option.category.name)
-                                option_descriptions.append(option.value)
-
-                                # Check for color-related options
-                                if option.category.name.lower() in ['color', 'colour', 'shade']:
-                                    option_types.append('COLOR')
-                                else:
-                                    option_types.append('DROP_DOWN')
-
-                            # Sync the variant as a WixProduct with field_type 'Variant'
-                            variant_wix_product, created = WixProduct.objects.update_or_create(
-                                handle_id=f"hbm_{product.pk}",  # Unique handle for each variant
-                                field_type='Variant',
-                                sku=f"hbm_{product.pk}_{idx}",  # Variant SKU (starting from 1)
-                                defaults={
-                                    'name': f"{product.title}",  # Variant title
-                                    'description': product.description,
-                                    'price': variant.price,
-                                    'ribbon': 'New',  # Set ribbon to 'New'
-                                    'inventory': 'InStock',  # Inventory status
-                                    'visible': True,
-                                    'discount_mode': None,
-                                    'discount_value': 0,
-                                    'weight': None,
-                                    'cost': None,
-                                    'product_option_name_1': option_names[0] if len(option_names) > 0 else None,
-                                    'product_option_type_1': option_types[0] if len(option_types) > 0 else None,
-                                    'product_option_description_1': option_descriptions[0] if len(option_descriptions) > 0 else None,
-                                    'product_option_name_2': option_names[1] if len(option_names) > 1 else None,
-                                    'product_option_type_2': option_types[1] if len(option_types) > 1 else None,
-                                    'product_option_description_2': option_descriptions[1] if len(option_descriptions) > 1 else None,
-                                    'product_option_name_3': option_names[2] if len(option_names) > 2 else None,
-                                    'product_option_type_3': option_types[2] if len(option_types) > 2 else None,
-                                    'product_option_description_3': option_descriptions[2] if len(option_descriptions) > 2 else None,
-                                    'product_option_name_4': option_names[3] if len(option_names) > 3 else None,
-                                    'product_option_type_4': option_types[3] if len(option_types) > 3 else None,
-                                    'product_option_description_4': option_descriptions[3] if len(option_descriptions) > 3 else None,
-                                    'product_option_name_5': option_names[4] if len(option_names) > 4 else None,
-                                    'product_option_type_5': option_types[4] if len(option_types) > 4 else None,
-                                    'product_option_description_5': option_descriptions[4] if len(option_descriptions) > 4 else None,
-                                    'product_option_name_6': option_names[5] if len(option_names) > 5 else None,
-                                    'product_option_type_6': option_types[5] if len(option_types) > 5 else None,
-                                    'product_option_description_6': option_descriptions[5] if len(option_descriptions) > 5 else None,
-                                }
+                            wix_product, created = WixProduct.objects.update_or_create(
+                                handle_id=f"hbm_{product.pk}",  # Use 'hbm_{product.pk}' for handle_id
+                                field_type='Product',
+                                sku=f"hbm_{product.pk}_0",  # SKU for the main product
+                                defaults=wix_product_defaults
                             )
 
-                            # Sync the variant's collections to the WixProduct
+                            wix_product.collections.set(product.collections.all())
+                            wix_product.save()
+
+                            logger.info(f"{'Created' if created else 'Updated'} WixProduct for: {product.title} (ID: {product.id})")
+
+                    # Now handle the remaining options from the first variant and all options from subsequent variants
+                    option_counter = 1  # Start after the first option
+
+                    for variant_idx, variant in enumerate(variants):
+                        for option_idx, option in enumerate(variant.options.all()):
+                            # Skip the first option of the first variant (used for the product)
+                            if variant_idx == 0 and option_idx == 0:
+                                continue
+
+                            option_counter += 1
+
+                            # Sync the variant as a WixProduct with field_type 'Variant'
+                            variant_wix_product_defaults = {
+                                'name': f"{product.title}",
+                                'description': product.description,
+                                'price': variant.price,
+                                'ribbon': 'New',
+                                'inventory': 'InStock',
+                                'visible': True,
+                                'discount_mode': None,
+                                'discount_value': 0,
+                                'weight': None,
+                                'cost': None,
+                                'product_option_name_1': option.category.name,
+                                #'product_option_type_1': 'COLOR' if option.category.name.lower() in ['color', 'colour', 'shade'] else 'DROP_DOWN',
+                                'product_option_type_1': 'DROP_DOWN',
+                                'product_option_description_1': option.value,
+                            }
+
+                            variant_wix_product, created = WixProduct.objects.update_or_create(
+                                handle_id=f"hbm_{product.pk}_{option_counter}",  # Unique handle for each option/variant
+                                field_type='Variant',
+                                sku=f"hbm_{product.pk}_{option_counter}",  # Unique SKU for each variant
+                                defaults=variant_wix_product_defaults
+                            )
+
                             variant_wix_product.collections.set(product.collections.all())
                             variant_wix_product.save()
 
-                            if created:
-                                logger.info(f"Created WixProduct Variant for: {product.title} - Variant {idx}")
-                            else:
-                                logger.info(f"Updated WixProduct Variant for: {product.title} - Variant {idx}")
+                            logger.info(f"{'Created' if created else 'Updated'} WixProduct Variant for: {product.title} - Option {option_counter}")
 
                 except Exception as e:
                     logger.error(f"Error syncing product {product.title} (ID: {product.id}): {e}")
