@@ -106,7 +106,7 @@ class WixProductListView(TemplateView):
             else:
                 # Create a unique list of option descriptions from the product and variants
                 product_and_variants = [product] + list(variants)
-                option_descriptions = set([pv.product_option_description_1 for pv in product_and_variants if pv.product_option_description_1])
+                option_descriptions = [pv.product_option_description_1 for pv in product_and_variants if pv.product_option_description_1]
                 unique_option_descriptions = ";".join(option_descriptions)
 
                 # Write product row with combined option descriptions
