@@ -27,13 +27,13 @@ class Command(BaseCommand):
                     # Sync the main product as a WixProduct
                     wix_product, created = WixProduct.objects.update_or_create(
                         handle_id=f"hbm_{product.pk}",  # Using 'hbm_{product.pk}' as the handle_id
+                        field_type='Product',  # Main product
+                        sku=f"hbm_{product.id}_0",  # SKU for main product
                         defaults={
-                            'field_type': 'Product',  # Main product
                             'name': product.title,
                             'description': product.description,
                             'price': product.price,
                             'product_image_url': ';'.join([image.url for image in product.images.all()]),
-                            'sku': f"{product.id}_0",  # SKU for main product
                             'ribbon': 'sale',  # Set ribbon to 'sale'
                             'inventory': 'InStock',  # Inventory status
                             'visible': True,
@@ -83,12 +83,12 @@ class Command(BaseCommand):
                             # Sync the variant as a WixProduct with field_type 'Variant'
                             variant_wix_product, created = WixProduct.objects.update_or_create(
                                 handle_id=f"hbm_{product.pk}",
+                                field_type='Variant',
+                                sku=f"hbm_{product.id}_{idx}",  # Variant SKU (starting from 1)
                                 defaults={
-                                    'field_type': 'Variant',
                                     'name': f"{product.title} - {variant}",  # Variant title
                                     'description': product.description,
                                     'price': variant.price,
-                                    'sku': f"{product.id}_{idx}",  # Variant SKU (starting from 1)
                                     'ribbon': 'sale',  # Set ribbon to 'sale'
                                     'inventory': 'InStock',  # Inventory status
                                     'visible': True,
