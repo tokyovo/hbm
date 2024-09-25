@@ -5,7 +5,7 @@ from tqdm import tqdm
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from django.conf import settings
-from myapp.models import Collection, WixProduct  # Replace 'myapp' with the actual app name
+from agent.models import Collection, WixProduct  # Replace 'myapp' with the actual app name
 
 logger = logging.getLogger(__name__)
 

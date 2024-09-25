@@ -1,7 +1,7 @@
 import csv
 import os
 from django.core.management.base import BaseCommand
-from myapp.models import WixProduct  # Replace 'myapp' with your actual app name
+from agent.models import WixProduct  # Replace 'myapp' with your actual app name
 import logging
 
 logger = logging.getLogger(__name__)
