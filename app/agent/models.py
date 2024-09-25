@@ -5,6 +5,7 @@ class Collection(models.Model):
     title = models.CharField(max_length=1024)
     description = models.TextField(blank=True, null=True)
     source_url = models.URLField(max_length=1024, unique=True)  # Increased length for the URL
+    csv_export = models.FileField(upload_to='csv_exports/', blank=True, null=True)
 
     def __str__(self):
         return self.title

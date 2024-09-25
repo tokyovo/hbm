@@ -90,7 +90,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'description', 'get_product_count']
+    list_display = ['pk', 'title', 'description', 'get_product_count', 'download_csv']
     search_fields = ['title', 'description']
     inlines = [ProductInlineInCollection, WixProductInline]  # Added WixProductInline here
     exclude = ('products',)
@@ -100,6 +100,13 @@ class CollectionAdmin(admin.ModelAdmin):
 
     get_product_count.short_description = 'Total Products'
 
+    def download_csv(self, obj):
+        if obj.csv_export:
+            # Create a link to the CSV file for download
+            return format_html('<a href="{}" download>Download CSV</a>', obj.csv_export.url)
+        return "No CSV file"
+    
+    download_csv.short_description = 'CSV Export'
 
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['pk', 'product', 'price', 'get_options']
