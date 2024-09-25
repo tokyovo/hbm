@@ -104,7 +104,7 @@ class WixProductListView(TemplateView):
                 writer.writerow([
                     product.handle_id, 'Product', product.name, product.description, product.product_image_url,
                     ";".join([c.title for c in product.collections.all()]), product.sku, product.ribbon, product.price,
-                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
+                    product.surcharge, product.visible, product.discount_mode, "", 
                     product.inventory, product.weight, product.cost,  # Fill remaining columns with empty strings
                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
                 ])
@@ -118,7 +118,7 @@ class WixProductListView(TemplateView):
                 writer.writerow([
                     product.handle_id, 'Product', product.name, product.description, product.product_image_url,
                     ";".join(set([c.title for c in product.collections.all()])), product.sku, product.ribbon, product.price,
-                    product.surcharge, product.visible, product.discount_mode, product.discount_value, 
+                    product.surcharge, product.visible, product.discount_mode, "", 
                     product.inventory, product.weight, product.cost,
                     product.product_option_name_1, product.product_option_type_1, unique_option_descriptions,  # unique list of option descriptions
                     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
@@ -129,7 +129,7 @@ class WixProductListView(TemplateView):
                     writer.writerow([
                         variant.handle_id, 'Variant', None, None, None,
                         "", variant.sku, "", variant.price,
-                        variant.surcharge, variant.visible, variant.discount_mode, variant.discount_value, 
+                        variant.surcharge, variant.visible, variant.discount_mode, "", 
                         variant.inventory, variant.weight, variant.cost,
                         "", "", variant.product_option_description_1,  # Empty name/type, variant description
                         "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
